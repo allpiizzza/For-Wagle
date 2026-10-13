@@ -1,10 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Wagle</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+        h2 {
+            text-align: center;
+            color: #1e293b;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+        .link-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-decoration: none;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+        }
+        .link-btn:last-child {
+            margin-bottom: 0;
+        }
+        .link-btn:hover,
+        .link-btn:focus-visible {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            transform: translateY(-1px);
+        }
+        .icon {
+            font-size: 1.5rem;
+        }
+        .text {
+            flex: 1;
+        }
+        .title {
+            font-weight: bold;
+            font-size: 1rem;
+            color: #334155;
+        }
+        .desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .arrow {
+            color: #94a3b8;
+            font-size: 1.2rem;
+        }
+        .link-btn:hover .title,
+        .link-btn:hover .arrow {
+            color: #1d4ed8;
+        }
+    </style>
 </head>
 <body>
+
+<div class="container">
+    <h2>🌊 For Wagle</h2>
+
+    <a class="link-btn" href="multagi.html">
+        <span class="icon">📉</span>
+        <span class="text">
+            <div class="title">주식 물타기 계산기</div>
+            <div class="desc">추가 매수 후 평균단가 계산</div>
+        </span>
+        <span class="arrow">›</span>
+    </a>
+
+    <a class="link-btn" href="baechune.html">
+        <span class="icon">🥬</span>
+        <span class="text">
+            <div class="title">배추네 아지트 독서모임</div>
+            <div class="desc">독서모임 안내사항</div>
+        </span>
+        <span class="arrow">›</span>
+    </a>
+</div>
 
 </body>
 </html>

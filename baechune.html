@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🥬 배추네 아지트 독서모임 안내사항 🐶</title>
-    <!-- Google Fonts: Gaegu & Gowun Dodum -->
+    <!-- Google Fonts: Gaegu (제목용) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 본문용 가독성 폰트: Pretendard -->
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
     <style>
         :root {
             --primary: #4e8c56;
@@ -30,7 +32,7 @@
         }
 
         body {
-            font-family: 'Gowun Dodum', sans-serif;
+            font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             line-height: 1.6;
@@ -162,7 +164,7 @@
             border-radius: 10px;
             cursor: pointer;
             font-size: 0.85rem;
-            font-family: 'Gowun Dodum', sans-serif;
+            font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
             white-space: nowrap;
             transition: background 0.2s, transform 0.1s;
         }
@@ -315,6 +317,139 @@
             color: #888888;
             font-size: 0.85rem;
         }
+
+        /* ===== 모바일 최적화 ===== */
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+
+        button {
+            touch-action: manipulation;
+        }
+
+        /* 터치 기기에서는 hover 효과로 카드가 들썩이지 않도록 */
+        @media (hover: none) {
+            .card:hover { transform: none; }
+            .pledge-btn:hover { transform: none; }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 16px 12px calc(60px + env(safe-area-inset-bottom));
+                line-height: 1.65;
+            }
+
+            header {
+                padding: 24px 14px 20px;
+                border-radius: 22px;
+                margin-bottom: 18px;
+            }
+
+            .badge-top {
+                font-size: 1.05rem;
+                padding: 3px 12px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .sub-desc {
+                font-size: 0.9rem;
+            }
+
+            .card {
+                padding: 18px 16px;
+                border-radius: 18px;
+                margin-bottom: 16px;
+            }
+
+            .card-title {
+                font-size: 1.4rem;
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+
+            .card-title .icon {
+                font-size: 1.5rem;
+            }
+
+            li {
+                font-size: 0.95rem;
+            }
+
+            .copy-box {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+
+            .copy-info {
+                margin-right: 0;
+                min-width: 0;
+            }
+
+            /* 손가락으로 누르기 편한 크기 (최소 44px) */
+            .btn-copy {
+                min-height: 44px;
+                padding: 8px 14px;
+                font-size: 0.88rem;
+                flex-shrink: 0;
+            }
+
+            .gift-grid {
+                gap: 10px;
+            }
+
+            .gift-box {
+                padding: 12px;
+            }
+
+            .pledge-section {
+                margin-top: 24px;
+                padding: 20px 16px;
+                border-radius: 20px;
+            }
+
+            .pledge-section h3 {
+                font-size: 1.5rem !important;
+            }
+
+            .pledge-btn {
+                width: 100%;
+                font-size: 1.35rem;
+                padding: 14px 20px;
+            }
+
+            .stamp-result {
+                font-size: 1.3rem;
+            }
+
+            .toast {
+                bottom: calc(20px + env(safe-area-inset-bottom));
+                max-width: calc(100% - 32px);
+                width: max-content;
+                text-align: center;
+            }
+        }
+
+        /* 아주 좁은 화면 (예: 아이폰 SE 1세대, 폴드 접은 화면) */
+        @media (max-width: 360px) {
+            .gift-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -363,7 +498,7 @@
         <div class="highlight-box">
             💡 <strong>요금 예시</strong><br>
             • 그냥 노는 모임 (노출첵): 4,000원<br>
-            • 책밥 4천원 + 십세트 만원 / <strong>뒷풀이는 비용 없음(0원)!</strong>
+            • 책밥 4천원 / 십세트 만원 <strong> - 뒷풀이는 비용 없음(0원)!</strong>
         </div>
     </section>
 
