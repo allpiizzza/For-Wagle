@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주식 물타기(평단가) 계산기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+        h2 {
+            text-align: center;
+            color: #1e293b;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .card-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+        label {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        input {
+            width: 55%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            text-align: right;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        input[readonly] {
+            background-color: #e2e8f0;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+        .result-card {
+            background-color: #eff6ff;
+            border: 2px solid #3b82f6;
+        }
+        .result-card .card-title {
+            color: #1e40af;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+        .result-row.highlight {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1d4ed8;
+            padding-top: 8px;
+            border-top: 1px dashed #bfdbfe;
+        }
+        .percent-text {
+            font-size: 1.05rem;
+            font-weight: bold;
+        }
+        .down {
+            color: #059669; /* 평단 하락 시 초록/파란 계열 표시 */
+        }
+        .up {
+            color: #dc2626; /* 평단 상승 시 빨간 계열 표시 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📉 주식 물타기 계산기</h2>
+
+    <div class="card">
+        <div class="card-title">📌 1. 현재 보유 상태</div>
+        <div class="input-group">
+            <label for="currentPrice">현재 평균단가</label>
+            <input type="number" id="currentPrice" placeholder="0" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label for="currentQty">보유 수량(주)</label>
+            <input type="number" id="currentQty" placeholder="0" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>현재 총 금액</label>
+            <input type="text" id="currentTotal" value="0 원" readonly>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">🛒 2. 추가 매수 (물타기)</div>
+        <div class="input-group">
+            <label for="addPrice">추가 매수단가</label>
+            <input type="number" id="addPrice" placeholder="0" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label for="addQty">추가 수량(주)</label>
+            <input type="number" id="addQty" placeholder="0" oninput="calculate()">
+        </div>
+        <div class="input-group">
+            <label>추가 매수 총액</label>
+            <input type="text" id="addTotal" value="0 원" readonly>
+        </div>
+    </div>
+
+    <div class="card result-card">
+        <div class="card-title">📊 3. 물탄 후 최종 결과</div>
+        <div class="result-row highlight">
+            <span>수정 평균단가</span>
+            <span id="finalPrice">0 원</span>
+        </div>
+        <div class="result-row">
+            <span>최종 총 수량</span>
+            <span id="finalQty">0 주</span>
+        </div>
+        <div class="result-row">
+            <span>최종 총 매수금액</span>
+            <span id="finalTotal">0 원</span>
+        </div>
+        <div class="result-row highlight">
+            <span>평단가 변화율</span>
+            <span id="priceChange" class="percent-text">0%</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        // 입력값 가져오기
+        const currentPrice = parseFloat(document.getElementById('currentPrice').value) || 0;
+        const currentQty = parseFloat(document.getElementById('currentQty').value) || 0;
+        const addPrice = parseFloat(document.getElementById('addPrice').value) || 0;
+        const addQty = parseFloat(document.getElementById('addQty').value) || 0;
+
+        // 1. 현재 총액 및 추가 총액 계산
+        const currentTotal = currentPrice * currentQty;
+        const addTotal = addPrice * addQty;
+
+        // 2. 최종 수량 및 최종 총액 계산
+        const finalQty = currentQty + addQty;
+        const finalTotal = currentTotal + addTotal;
+
+        // 3. 최종 평단가 계산
+        const finalPrice = finalQty > 0 ? Math.round(finalTotal / finalQty) : 0;
+
+        // 4. 평단가 변화율 계산 (%)
+        let percentChange = 0;
+        if (currentPrice > 0 && finalPrice > 0) {
+            percentChange = ((finalPrice - currentPrice) / currentPrice) * 100;
+        }
+
+        // 화면 출력 업데이트
+        document.getElementById('currentTotal').value = currentTotal.toLocaleString('ko-KR') + ' 원';
+        document.getElementById('addTotal').value = addTotal.toLocaleString('ko-KR') + ' 원';
+
+        document.getElementById('finalPrice').innerText = finalPrice.toLocaleString('ko-KR') + ' 원';
+        document.getElementById('finalQty').innerText = finalQty.toLocaleString('ko-KR') + ' 주';
+        document.getElementById('finalTotal').innerText = finalTotal.toLocaleString('ko-KR') + ' 원';
+
+        // 평단가 변화율 표시 (+ / - 세팅)
+        const changeElement = document.getElementById('priceChange');
+        if (percentChange < 0) {
+            changeElement.innerText = `${percentChange.toFixed(2)}% 낮아짐 🔻`;
+            changeElement.className = 'percent-text down';
+        } else if (percentChange > 0) {
+            changeElement.innerText = `+${percentChange.toFixed(2)}% 높아짐 🔺`;
+            changeElement.className = 'percent-text up';
+        } else {
+            changeElement.innerText = '0%';
+            changeElement.className = 'percent-text';
+        }
+    }
+</script>
+
+</body>
+</html>

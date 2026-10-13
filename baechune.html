@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥬 배추네 아지트 독서모임 안내사항 🐶</title>
+    <!-- Google Fonts: Gaegu & Gowun Dodum -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4e8c56;
+            --primary-light: #e8f5e9;
+            --accent: #ff8a65;
+            --accent-light: #fff3e0;
+            --warn: #e57373;
+            --bg: #fcf9f2;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-muted: #666666;
+            --border: #f0e6d6;
+            --shadow: 0 8px 24px rgba(78, 140, 86, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 24px 16px 80px;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        /* 헤더 */
+        header {
+            text-align: center;
+            padding: 30px 16px 24px;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 2px dashed #c8e6c9;
+            position: relative;
+        }
+
+        .badge-top {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-family: 'Gaegu', cursive;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-family: 'Gaegu', cursive;
+            font-size: 2.4rem;
+            color: #2e5934;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        .sub-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* 카드 공통 스타일 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 22px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Gaegu', cursive;
+            font-size: 1.6rem;
+            color: #2e5934;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 8px;
+        }
+
+        .card-title .icon {
+            font-size: 1.8rem;
+        }
+
+        /* 리스트 스타일 */
+        ul {
+            list-style: none;
+        }
+
+        li {
+            margin-bottom: 12px;
+            padding-left: 18px;
+            position: relative;
+            font-size: 0.96rem;
+        }
+
+        li::before {
+            content: "•";
+            position: absolute;
+            left: 2px;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* 복사 버튼 & 복사 가능한 박스 */
+        .copy-box {
+            background: #f8faf8;
+            border: 1px solid #e0ede0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+        }
+
+        .copy-info {
+            word-break: break-all;
+            margin-right: 10px;
+        }
+
+        .copy-info strong {
+            color: #2e5934;
+        }
+
+        .btn-copy {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Gowun Dodum', sans-serif;
+            white-space: nowrap;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-copy:hover {
+            background: #3c6e43;
+        }
+
+        .btn-copy:active {
+            transform: scale(0.96);
+        }
+
+        /* 하이라이트 박스 */
+        .highlight-box {
+            background: #fff8e1;
+            border-left: 4px solid #ffb300;
+            padding: 12px 14px;
+            border-radius: 0 12px 12px 0;
+            margin-top: 10px;
+            font-size: 0.92rem;
+        }
+
+        /* 배추 전용 카드 (소심 강쥐 경고) */
+        .card-baechu {
+            border: 2px solid #ffcc80;
+            background: linear-gradient(180deg, #fffdfa 0%, #fffbf2 100%);
+        }
+
+        .card-baechu .card-title {
+            color: #d84315;
+            border-bottom-color: #ffe0b2;
+        }
+
+        .baechu-alert {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 0.92rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 선물 카드 */
+        .gift-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .gift-box {
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+        }
+
+        .gift-good {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+        }
+
+        .gift-bad {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+        }
+
+        .gift-tag {
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: inline-block;
+            font-size: 0.85rem;
+        }
+
+        .gift-good .gift-tag { color: #2e7d32; }
+        .gift-bad .gift-tag { color: #c62828; }
+
+        /* 서약 완료 스탬프 버튼 */
+        .pledge-section {
+            text-align: center;
+            margin-top: 32px;
+            padding: 24px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            border: 1px dashed var(--primary);
+        }
+
+        .pledge-btn {
+            background: #ff8a65;
+            color: white;
+            border: none;
+            font-family: 'Gaegu', cursive;
+            font-size: 1.5rem;
+            padding: 12px 32px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255, 138, 101, 0.4);
+            transition: all 0.2s;
+        }
+
+        .pledge-btn:hover {
+            background: #f4511e;
+            transform: scale(1.03);
+        }
+
+        .stamp-result {
+            margin-top: 16px;
+            font-family: 'Gaegu', cursive;
+            font-size: 1.5rem;
+            color: #2e5934;
+            display: none;
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 토스트 알림 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(46, 89, 52, 0.95);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 0.92rem;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #888888;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 헤더 -->
+    <header>
+        <div class="badge-top">📚 와글와글 독서모임 아지트 🥬</div>
+        <h1>배추네 독서모임 안내서</h1>
+        <p class="sub-desc">소심 강쥐 배추와 책 & 수다가 함께하는 포근한 보금자리</p>
+    </header>
+
+    <!-- A. 주소 및 교통안내 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📍</span> A. 주소 및 오시는 길
+        </div>
+
+        <div class="copy-box">
+            <div class="copy-info">
+                <strong>집 주소:</strong> 이랴에게 문의하세요
+            </div>
+        </div>
+
+        <div class="copy-box">
+            <div class="copy-info">
+                <strong>공동현관 비번:</strong> #2104#2017
+            </div>
+        </div>
+
+        <ul>
+            <li><strong>주차:</strong> 아파트 단지 주차장 이용 가능 (단, 11월부터 방문 차량 등록 방법 확인 후 재안내 예정)</li>
+        </ul>
+    </section>
+
+    <!-- B. 이용 요금 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">💰</span> B. 이용 요금 안내
+        </div>
+        <ul>
+            <li><strong>식비:</strong> 1인당 5,000원 <br><span style="color: var(--text-muted); font-size: 0.88rem;">(주인장이 요리에 자신이 없는 관계로 저렴하게 모십니다 👩‍🍳 배달 주문 시 n분의 1 엔빵!)</span></li>
+            <li><strong>공간 이용료:</strong> 기본 4,000원</li>
+            <li><strong>4시간 이상 프로그램:</strong> 4시간 이후부터 시간당 +1,000원 추가</li>
+        </ul>
+        <div class="highlight-box">
+            💡 <strong>요금 예시</strong><br>
+            • 그냥 노는 모임 (노출첵): 4,000원<br>
+            • 책밥 4천원 + 십세트 만원 / <strong>뒷풀이는 비용 없음(0원)!</strong>
+        </div>
+    </section>
+
+    <!-- C. 와이파이 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📶</span> C. 와이파이 (Wi-Fi)
+        </div>
+        <p style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-muted);">거실에 대문짝만한 QR코드도 붙어있어요!</p>
+
+        <div class="copy-box">
+            <div class="copy-info">
+                <strong>KT_GiGA_5G_ABFB:</strong> 8ae30bg040
+            </div>
+            <button class="btn-copy" onclick="copyText('8ae30bg040', '와이파이 비밀번호(ABFB) 복사 완료!')">비번 복사</button>
+        </div>
+
+        <div class="copy-box">
+            <div class="copy-info">
+                <strong>KT_GiGA_5G_3D65:</strong> aacf3ce266
+            </div>
+            <button class="btn-copy" onclick="copyText('aacf3ce266', '와이파이 비밀번호(3D65) 복사 완료!')">비번 복사</button>
+        </div>
+    </section>
+
+    <!-- E. 배추 관련 주의사항 (강조) -->
+    <section class="card card-baechu">
+        <div class="card-title">
+            <span class="icon">🐕</span> E. ★ 배추 보존 구역 수칙 ★
+        </div>
+
+        <div class="baechu-alert">
+            ⚠️ 배추는 엄청엄청 낯가리는 극 I 소심 강쥐입니다!
+        </div>
+
+        <ul>
+            <li><strong>모른 척 필수:</strong> 처음 등장하면 호들갑 떨지 말고 눈길도 주지 마시고 <strong>못 본 척</strong> 해주세요.</li>
+            <li><strong>3대 금지:</strong> 배추가 먼저 다가오기 전까지 <strong>이름 부르기 X, 빤히 쳐다보기 X, 만지기 X</strong></li>
+            <li><strong>인사법:</strong> 먼저 다가오더라도 바로 손대지 마시고, <strong>손등 냄새부터 킁킁 맡게</strong> 해주세요.</li>
+            <li><strong>간식 엄금:</strong> 집사 허락 없는 간식 지급 절대 금지! 🚫</li>
+            <li><strong>선호 장난감:</strong> 패브릭 소재의 바스락·삑삑이 노즈워크 장난감을 격하게 사랑합니다.</li>
+            <li><strong>세탁 매너:</strong> 장난감은 뽀송하게 세탁 후 지급하므로 후기 인증 영상이 조금 늦더라도 너그럽게 기다려주세요 🫧</li>
+        </ul>
+
+        <div class="baechu-alert" style="margin-top: 12px; margin-bottom: 0;">
+            🚨 <strong>"향수 뿌리지므아아앙!!"</strong> 배추 코가 마이 아파요! 👃❌
+        </div>
+    </section>
+
+    <!-- D. 공간 이용 유의사항 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🛋️</span> D. 하우스 유의사항
+        </div>
+        <ul>
+            <li><strong>물은 셀프:</strong> 냉장고 안 브리타 정수기 이용 (컵은 주방 상부장)</li>
+            <li><strong>커피:</strong> 돌체구스토 캡슐머신 또는 카누를 편하게 즐겨주세요 ☕</li>
+            <li><strong>BGM & 미디어:</strong> TV는 없습니다! 음악은 취향껏 자유롭게 틀어주세요 🎵</li>
+            <li><strong>소파 & 침대:</strong> 소파에 발 올리기 OK (개털은 감당하기…🐶) <br>
+                <span style="color: #d84315; font-weight: bold;">⛔ 침대는 절대 금지!</span> (안방 입장 OK, 바닥 착석 OK, 단 침대에 눕고 싶다면 반드시 발을 씻고 오기!)</li>
+            <li><strong>온도 & 조명:</strong> 추우면 보일러 바로 올려드려요. 직접등 대신 아늑한 <strong>간접등</strong>을 사랑하는 주인장의 취향을 존중해 주세요 🕯️</li>
+            <li><strong>서재:</strong> 책장의 책은 자유롭게 구경하시고, 빌려가고 싶을 땐 편하게 말해주세요.</li>
+            <li><strong>선물:</strong> 집들이 선물은 처음 한 번이면 넘치게 충분합니다. 다음부터는 가벼운 빈손으로!</li>
+        </ul>
+
+        <div class="highlight-box">
+            🗄️ <strong>와글 공용 서랍장 & 욕실 꿀팁</strong><br>
+            거실에 <strong>와글 공용 서랍장</strong>이 있어요! 가방과 짐은 여기에 쏙 넣어두세요.<br>
+            <em>※ 주의: 여기에 두고 가는 물건은 자동으로 와글 공용품이 됩니다(ㅋㅋ)</em><br>
+            욕실에 새 칫솔이 구비되어 있으니 편히 쓰시고, 이름 써서 서랍장에 넣어두면 다음 모임 때 또 쓰실 수 있어요! 🪥
+        </div>
+    </section>
+
+    <!-- F. 집들이 선물 안내 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🎁</span> F. 집들이 선물 가이드
+        </div>
+        <p style="font-size: 0.92rem;">선물은 별도로 공유해 드린 <strong>위시리스트</strong>를 먼저 참고해 주세요!</p>
+
+        <div class="gift-grid">
+            <div class="gift-box gift-good">
+                <div class="gift-tag">⭕ 대환영 아이템</div>
+                <div>• 소확청 돌돌이 리필</div>
+                <div>• 고강탈 탈취제</div>
+                <div style="font-size: 0.82rem; color: #4e8c56; margin-top: 4px;">언제나 격하게 환영합니다!</div>
+            </div>
+            <div class="gift-box gift-bad">
+                <div class="gift-tag">❌ 절대 금지 아이템</div>
+                <div>• 디퓨저</div>
+                <div>• 방향제</div>
+                <div>• 향초 등 향 제품</div>
+                <div style="font-size: 0.82rem; color: #c62828; margin-top: 4px;">배추 코 건강을 위해 금지!</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 서약 & 스탬프 인터랙션 -->
+    <section class="pledge-section">
+        <h3 style="font-family: 'Gaegu', cursive; font-size: 1.8rem; margin-bottom: 6px;">배추네 아지트 방문 준비 끝났나요?</h3>
+        <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 18px;">수칙을 모두 확인했다면 도장을 쾅 찍어주세요!</p>
+        <button class="pledge-btn" onclick="stampPledge()">🐾 수칙 숙지 완료 도장 쾅!</button>
+        <div id="stampResult" class="stamp-result">
+            ✨ <strong>[입장 승인]</strong> 배추가 손등 냄새 맡을 기회를 부여합니다! 🐶💚
+        </div>
+    </section>
+
+    <footer>
+        기타 모든 문의는 편하게 단톡방/카톡으로 물어봐주세요 💬<br>
+        © 배추네 하우스 x 와글와글 독서모임
+    </footer>
+</div>
+
+<!-- 토스트 팝업 알림 -->
+<div id="toast" class="toast">클립보드에 복사되었어요!</div>
+
+<script>
+    // 복사 기능 + 토스트 알림
+    function copyText(text, message) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(message || '복사 완료!');
+            });
+        } else {
+            // Fallback for non-https
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(message || '복사 완료!');
+            } catch (err) {
+                showToast('복사에 실패했습니다.');
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    // 도장 찍기 인터랙션
+    function stampPledge() {
+        const result = document.getElementById('stampResult');
+        result.style.display = 'block';
+        showToast('🐾 도장이 성공적으로 찍혔습니다!');
+    }
+</script>
+</body>
+</html>
