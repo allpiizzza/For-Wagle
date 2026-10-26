@@ -282,16 +282,6 @@
             <span class="arrow">›</span>
         </a>
 
-        <a class="link-btn" href="https://forms.gle/TJw9gBihsqk4HVjC7">
-            <span class="dday" id="proposalDday" data-deadline="2026-10-20"></span>
-            <span class="icon tint-violet">📝</span>
-            <span class="text">
-                <span class="title">27년 프로그램 제안서</span>
-                <span class="desc">10/20까지 꼭 하세요!!!</span>
-            </span>
-            <span class="arrow">›</span>
-        </a>
-
         <a class="link-btn" href="waglemap.html">
             <span class="icon tint-teal">🗺️</span>
             <span class="text">
@@ -350,27 +340,6 @@
 
     <footer>오늘도 와글와글 📚</footer>
 </div>
-
-<script>
-    // 제안서 마감 D-day 표시
-    (function () {
-        const badge = document.getElementById('proposalDday');
-        const [y, m, d] = badge.dataset.deadline.split('-').map(Number);
-        const end = new Date(y, m - 1, d);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const days = Math.round((end - today) / 86400000);
-
-        if (days > 0) {
-            badge.textContent = 'D-' + days;
-        } else if (days === 0) {
-            badge.textContent = 'D-DAY';
-        } else {
-            badge.textContent = '마감';
-            badge.classList.add('closed');
-        }
-    })();
-</script>
 
 </body>
 </html>
