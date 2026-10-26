@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>올리밴더의 지팡이 보관소 (다차원 스탯 세분화)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+KR:wght@400;600;700&display=swap');
+
+        :root {
+            --bg: #090a10;
+            --card-bg: rgba(18, 20, 31, 0.94);
+            --card-inner: #0f121d;
+            --border: #382c1b;
+            --gold: #d4af37;
+            --gold-light: #fbeea4;
+            --gold-dark: #8c6d23;
+            --text: #eae6df;
+            --text-muted: #9e978e;
+
+            /* 세분화된 스탯 5종 고유 컬러 /
+            --stat-mana: #fbbf24;      / 🔮 기본 마력 (골든 앰버) /
+            --stat-curse: #c084fc;     / 💀 저주 강화 (다크 퍼플 / 크림슨) /
+            --stat-defense: #38bdf8;   / 🛡️ 수호 방어 (프로텍고 시안블루) /
+            --stat-speed: #f97316;     / ⚡ 영창 속도 (라이트닝 오렌지) /
+            --stat-luck: #4ade80;      / 🍀 신비 행운 (펠릭스 에메랄드) */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Serif KR', -apple-system, BlinkMacSystemFont, serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image:
+                    radial-gradient(ellipse at 50% 0%, rgba(90, 60, 20, 0.32) 0%, transparent 60%),
+                    radial-gradient(ellipse at 85% 90%, rgba(55, 20, 75, 0.32) 0%, transparent 60%),
+                    linear-gradient(180deg, #090a0f 0%, #050609 100%);
+            background-attachment: fixed;
+            color: var(--text);
+            padding: 24px 16px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .shop-sign {
+            display: inline-block;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: var(--gold-dark);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        header h1 {
+            font-family: 'Cinzel', 'Noto Serif KR', serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 2px 4px rgba(0,0,0,0.9);
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        /* 상단 배너 */
+        .quick-assign-banner {
+            background: linear-gradient(135deg, rgba(34, 28, 19, 0.95) 0%, rgba(18, 20, 31, 0.95) 100%);
+            border: 1px solid var(--gold);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 235, 170, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .banner-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .banner-title .icon {
+            font-size: 28px;
+        }
+
+        .banner-title h3 {
+            font-size: 16px;
+            color: var(--gold-light);
+            font-weight: 700;
+        }
+
+        .banner-title p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .banner-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* 컨트롤 영역 */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 14px 18px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            margin-bottom: 22px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 9px 14px;
+            border: 1px solid #3c3224;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #090a10;
+            color: #fff;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sort-select {
+            background: #181d2c;
+            color: var(--gold-light);
+            border: 1px solid #3d3527;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 13px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-gold-main {
+            background: linear-gradient(135deg, #d4af37 0%, #a87d1c 100%);
+            color: #140d04;
+            font-weight: 800;
+            box-shadow: 0 3px 12px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-gold-main:hover {
+            filter: brightness(1.15);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #181d2c;
+            color: var(--gold-light);
+            border: 1px solid #3d3527;
+        }
+
+        .btn-secondary:hover {
+            background: #252d45;
+            border-color: var(--gold);
+        }
+
+        .btn-admin {
+            background: #25162e;
+            color: #d8b4fe;
+            border: 1px solid #583377;
+        }
+
+        .btn-admin:hover {
+            background: #361b45;
+            border-color: #c084fc;
+        }
+
+        .btn-reset {
+            background: #2b1318;
+            color: #fca5a5;
+            border: 1px solid #5c242c;
+        }
+
+        .btn-reset:hover {
+            background: #3b171e;
+        }
+
+        /* 카드 그리드 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 18px;
+            margin-bottom: 26px;
+        }
+
+        .wand-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .wand-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--gold-dark);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7), 0 0 14px rgba(212, 175, 55, 0.15);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .owner-badge {
+            background: #111422;
+            border: 1px solid #3a3224;
+            font-size: 11px;
+            color: var(--gold);
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        .owner-name {
+            font-size: 19px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .total-power-badge {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--gold-light);
+            background: #0d0f17;
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid #4a3e26;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 지팡이 이미지 구역 */
+        .wand-visual-box {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #090a12 0%, #05060a 100%);
+            border: 1px solid #2d261b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .wand-visual-box:hover .wand-img-overlay {
+            opacity: 1;
+        }
+
+        .wand-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .wand-visual-box:hover .wand-img {
+            transform: scale(1.04);
+        }
+
+        .wand-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: #64748b;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .wand-placeholder .icon {
+            font-size: 26px;
+            color: var(--gold-dark);
+        }
+
+        .wand-img-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--gold-light);
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        /* 지팡이 프로필 헤더 */
+        .wand-profile {
+            background: var(--card-inner);
+            border: 1px solid #29241c;
+            border-radius: 10px;
+            padding: 9px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wand-spec-text {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .btn-edit-inline {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #3d3527;
+        }
+
+        .btn-edit-inline:hover {
+            color: var(--gold);
+            border-color: var(--gold);
+            background: #1f1b14;
+        }
+
+        /* 🌟 세분화된 스탯 게이지 매트릭스 🌟 */
+        .stats-matrix {
+            background: #090a13;
+            border: 1px solid #282116;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: 82px 1fr 34px;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .stat-name {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .stat-mini-bar {
+            background: #05060a;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+            border: 1px solid #1f1a14;
+            position: relative;
+        }
+
+        .stat-mini-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.35s ease;
+        }
+
+        .stat-val-text {
+            font-weight: 800;
+            text-align: right;
+        }
+
+        /* 각 스탯별 전용 게이지 색상 */
+        .fill-mana { background: linear-gradient(90deg, #78350f, var(--stat-mana)); box-shadow: 0 0 6px rgba(251, 191, 36, 0.4); }
+        .fill-curse { background: linear-gradient(90deg, #581c87, var(--stat-curse)); box-shadow: 0 0 6px rgba(192, 132, 252, 0.5); }
+        .fill-defense { background: linear-gradient(90deg, #0369a1, var(--stat-defense)); box-shadow: 0 0 6px rgba(56, 189, 248, 0.4); }
+        .fill-speed { background: linear-gradient(90deg, #9a3412, var(--stat-speed)); box-shadow: 0 0 6px rgba(249, 115, 22, 0.4); }
+        .fill-luck { background: linear-gradient(90deg, #15803d, var(--stat-luck)); box-shadow: 0 0 6px rgba(74, 222, 128, 0.4); }
+
+        /* 장착 아이템 구역 */
+        .wand-items-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 28px;
+            align-items: center;
+        }
+
+        .item-chip {
+            background: #171526;
+            border: 1px solid #43315c;
+            color: #f3e8ff;
+            border-radius: 7px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .item-chip:hover {
+            background: #2a1f42;
+            border-color: #c084fc;
+            transform: translateY(-1px);
+        }
+
+        .chip-badge {
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.5);
+            font-weight: 700;
+        }
+
+        .no-items-text {
+            font-size: 11px;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 4px;
+            border-top: 1px dashed rgba(255,255,255,0.06);
+        }
+
+        .btn-undo {
+            background: transparent;
+            border: none;
+            color: #71717a;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 2px 4px;
+        }
+
+        .btn-undo:hover {
+            color: #f87171;
+            text-decoration: underline;
+        }
+
+        /* 로그 섹션 */
+        .log-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .log-header h2 {
+            font-size: 16px;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-list {
+            max-height: 240px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .log-item {
+            background: #090a11;
+            border: 1px solid #292318;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-target {
+            color: var(--gold-light);
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        .log-desc {
+            color: #e2e8f0;
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 4, 8, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: linear-gradient(180deg, #181926 0%, #10111a 100%);
+            border: 1px solid var(--gold);
+            border-radius: 18px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.9), 0 0 25px rgba(212, 175, 55, 0.25);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #332b1d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #14141f;
+        }
+
+        .modal-header h3 {
+            font-size: 17px;
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #090a10;
+            border: 1px solid #3d3424;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #332b1d;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #0c0d15;
+        }
+
+        .msg-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a1e2f;
+            border: 1px solid var(--gold);
+            color: var(--gold-light);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 15px rgba(212, 175, 55, 0.4);
+            z-index: 2000;
+            transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .msg-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="shop-sign">Makers of Fine Wands since 382 B.C.</div>
+        <h1>🪄 올리밴더의 지팡이 보관소 📜</h1>
+        <p>지팡이가 마법사를 선택한다 — 5대 속성 세분화 스탯 & 맞춤형 각성 인벤토리</p>
+    </header>
+
+    <!-- 상단 공통 배너 -->
+    <div class="quick-assign-banner">
+        <div class="banner-title">
+            <span class="icon">✨</span>
+            <div>
+                <h3>[공통] 지팡이 능력치(아이템) 부여 & 주입</h3>
+                <p>미션 수행 후 뽑은 능력치(저주강화, 마력, 방어 등)를 자신의 지팡이에 즉시 깃들게 하세요!</p>
+            </div>
+        </div>
+        <div class="banner-actions">
+            <button class="btn-gold-main" onclick="openAssignModal()">🪄 지팡이에 능력치 주입하기</button>
+            <button class="btn-admin" onclick="openManageStatItemsModal()">⚙️ 능력치(아이템) 풀 관리 (관리자)</button>
+        </div>
+    </div>
+
+    <!-- 컨트롤 바 -->
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="마법사 닉네임 / 지팡이 검색 (예: 최미노, 불사조)" oninput="renderCards()" />
+        </div>
+        <div class="btn-group">
+            <select class="sort-select" id="sortCriteriaSelect" onchange="sortCards()">
+                <option value="total">⚡ 종합 위력순 정렬</option>
+                <option value="curse">💀 저주 강화순 정렬</option>
+                <option value="mana">🔮 기본 마력순 정렬</option>
+                <option value="defense">🛡️ 수호 방어순 정렬</option>
+                <option value="speed">⚡ 영창 속도순 정렬</option>
+                <option value="luck">🍀 신비 행운순 정렬</option>
+            </select>
+            <button class="btn-secondary" onclick="exportData()">💾 장부 복사</button>
+            <button class="btn-reset" onclick="resetAllData()">🔄 전체 초기화</button>
+        </div>
+    </div>
+
+    <!-- 28명 멤버 지팡이 카드 그리드 -->
+    <div class="grid" id="wandGrid"></div>
+
+    <!-- 실시간 조율 로그 -->
+    <div class="log-section">
+        <div class="log-header">
+            <h2>📜 지팡이 마력 각성 & 능력치 부여 장부</h2>
+            <span style="font-size: 12px; color: var(--text-muted);">실시간 로그</span>
+        </div>
+        <div class="log-list" id="logList"></div>
+    </div>
+</div>
+
+<!-- 1. 공통 능력치 주입 모달 (유저용) -->
+<div class="modal-overlay" id="assignModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🪄 지팡이에 능력치(아이템) 주입</h3>
+            <button class="btn-edit-inline" style="font-size:16px;" onclick="closeModal('assignModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="assignMemberSelect">1. 본인의 마법사 닉네임 선택</label>
+                <select id="assignMemberSelect"></select>
+            </div>
+            <div class="form-group">
+                <label for="assignItemSelect">2. 획득한 능력치 / 아이템 선택</label>
+                <select id="assignItemSelect" onchange="previewSelectedItemDesc()"></select>
+                <div id="assignItemPreview" style="font-size: 12px; color: var(--gold-light); margin-top: 4px; padding: 8px 12px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid #332b1d;"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('assignModal')">취소</button>
+            <button class="btn-gold-main" onclick="submitAssignItem()">✨ 지팡이에 깃들게 하기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 2. 지팡이 이름 및 세부 기본 스탯 설정 모달 -->
+<div class="modal-overlay" id="wandEditModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="wandEditTitle">⚙️ 지팡이 정보 & 초기 기본 스탯 각인</h3>
+            <button class="btn-edit-inline" style="font-size:16px;" onclick="closeModal('wandEditModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editMemberName" />
+            <div class="form-group">
+                <label>지팡이 명칭 & 목재/심 (예: 11인치 서양물푸레나무와 불사조의 깃털)</label>
+                <input type="text" id="editWandName" placeholder="지팡이의 이름을 지어주세요" />
+            </div>
+
+            <div style="font-size:12px; color:var(--gold); font-weight:700; margin-top:6px;">초기 기본 스탯 배분 (처음 지팡이 제작 시 설정)</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                <div class="form-group">
+                    <label style="color:var(--stat-mana);">🔮 기본 마력</label>
+                    <input type="number" id="editBaseMana" min="0" max="50" />
+                </div>
+                <div class="form-group">
+                    <label style="color:var(--stat-curse);">💀 저주 강화</label>
+                    <input type="number" id="editBaseCurse" min="0" max="50" />
+                </div>
+                <div class="form-group">
+                    <label style="color:var(--stat-defense);">🛡️ 수호 방어</label>
+                    <input type="number" id="editBaseDefense" min="0" max="50" />
+                </div>
+                <div class="form-group">
+                    <label style="color:var(--stat-speed);">⚡ 영창 속도</label>
+                    <input type="number" id="editBaseSpeed" min="0" max="50" />
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label style="color:var(--stat-luck);">🍀 신비 행운</label>
+                    <input type="number" id="editBaseLuck" min="0" max="50" />
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('wandEditModal')">취소</button>
+            <button class="btn-gold-main" onclick="saveWandProfile()">💾 각인 저장</button>
+        </div>
+    </div>
+</div>
+
+<!-- 3. 지팡이 사진(이미지) 등록 모달 -->
+<div class="modal-overlay" id="wandImageModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="wandImageModalTitle">📸 지팡이 이미지 등록</h3>
+            <button class="btn-edit-inline" style="font-size:16px;" onclick="closeModal('wandImageModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="imgUploadMemberName" />
+
+            <div class="form-group">
+                <label>1. 내 컴퓨터/스마트폰 사진 파일 첨부</label>
+                <input type="file" id="localWandFileInput" accept="image/*" onchange="handleLocalImageUpload(event)" style="padding: 7px; background: #0b0d17;" />
+                <span style="font-size: 11px; color: var(--text-muted);">* 사진을 올리면 고화질 압축되어 카드에 자동 저장됩니다.</span>
+            </div>
+
+            <div style="text-align: center; font-size: 11px; color: var(--gold-dark);">- 또는 -</div>
+
+            <div class="form-group">
+                <label>2. 이미지 웹 주소(URL) 직접 입력</label>
+                <input type="text" id="imgUrlInput" placeholder="https://... 지팡이 이미지 링크" oninput="previewImageFromUrl()" />
+            </div>
+
+            <div class="form-group">
+                <label>미리보기</label>
+                <div style="width: 100%; height: 130px; border-radius: 8px; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; background: #080911; overflow: hidden;">
+                    <img id="modalImgPreview" src="" alt="미리보기" style="max-width:100%; max-height:100%; object-fit:contain; display:none;" />
+                    <span id="modalImgPlaceholder" style="font-size: 12px; color: #64748b;">선택된 이미지가 없습니다</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" style="color:#f87171;" onclick="clearWandImage()">사진 지우기</button>
+            <button class="btn-secondary" onclick="closeModal('wandImageModal')">취소</button>
+            <button class="btn-gold-main" onclick="saveWandImage()">✨ 지팡이 사진 등록</button>
+        </div>
+    </div>
+</div>
+
+<!-- 4. 관리자: 세분화된 능력치/아이템 풀 관리 모달 -->
+<div class="modal-overlay" id="statManageModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>⚙️ 능력치(아이템) 풀 관리 (관리자)</h3>
+            <button class="btn-edit-inline" style="font-size:16px;" onclick="closeModal('statManageModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div style="font-size: 12px; color: var(--text-muted);">
+                미션 진행 시 뽑을 수 있는 마법 아이템을 등록하세요. 스탯 속성(저주강화, 마력 등)을 자유롭게 지정할 수 있습니다.
+            </div>
+
+            <!-- 신규 추가 폼 -->
+            <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 10px; border: 1px dashed var(--border); display: flex; flex-direction: column; gap: 8px;">
+                <div style="font-weight: 700; font-size: 12px; color: var(--gold);">+ 새로운 능력치/아이템 등록</div>
+                <input type="text" id="newStatName" placeholder="능력치 명칭 (예: 💀 바실리스크 독니 각인)" />
+
+                <div style="display: flex; gap: 8px;">
+                    <select id="newStatType" style="width: 140px;">
+                        <option value="curse">💀 저주 강화</option>
+                        <option value="mana">🔮 기본 마력</option>
+                        <option value="defense">🛡️ 수호 방어</option>
+                        <option value="speed">⚡ 영창 속도</option>
+                        <option value="luck">🍀 신비 행운</option>
+                    </select>
+                    <input type="number" id="newStatAmount" placeholder="수치 (예: 10)" style="width: 110px;" />
+                    <input type="text" id="newStatEffect" placeholder="특수 효능 설명" style="flex:1;" />
+                </div>
+                <button class="btn-gold-main" onclick="addNewStatItem()">풀(Pool)에 추가 등록</button>
+            </div>
+
+            <!-- 현재 목록 -->
+            <div class="form-group">
+                <label>현재 등록된 능력치 풀 (삭제 클릭 시 제거)</label>
+                <div id="statItemList" style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('statManageModal')">닫기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 알림 토스트 UI -->
+<div class="msg-toast" id="msgToast"></div>
+
+<script>
+    var ADMIN_PW = "0628";
+
+    // 28명 마법사 명단
+    var DEFAULT_MEMBERS = [
+        "최미노", "밍보", "유재", "고래", "구마", "난수", "당근", "동글",
+        "따란", "모모", "모아나", "새벽", "송", "수리", "스물", "신디",
+        "써니", "에스", "영원", "유누", "윤슬", "이리", "임유월", "제임스",
+        "주니", "채채", "초록", "최리"
+    ];
+
+    // 스탯 정의
+    var STAT_INFO = {
+        mana:    { label: "기본 마력", icon: "🔮", color: "var(--stat-mana)", fillClass: "fill-mana" },
+        curse:   { label: "저주 강화", icon: "💀", color: "var(--stat-curse)", fillClass: "fill-curse" },
+        defense: { label: "수호 방어", icon: "🛡️", color: "var(--stat-defense)", fillClass: "fill-defense" },
+        speed:   { label: "영창 속도", icon: "⚡", color: "var(--stat-speed)", fillClass: "fill-speed" },
+        luck:    { label: "신비 행운", icon: "🍀", color: "var(--stat-luck)", fillClass: "fill-luck" }
+    };
+
+    // 기본 등록되어 있는 능력치(아이템) 풀 (저주강화+10 포함!)
+    var DEFAULT_STAT_POOL = [
+        { id: "stat_curse_10", name: "💀 바실리스크의 독니", statType: "curse", amount: 10, effect: "어둠의 마법과 저주 주문 위력 극대화" },
+        { id: "stat_mana_10", name: "🔥 불사조의 깃털 핵", statType: "mana", amount: 10, effect: "강력하고 순수한 마력 방출" },
+        { id: "stat_def_8", name: "🛡️ 프로텍고 룬 각인", statType: "defense", amount: 8, effect: "적의 마법 공격과 저주를 차단하는 결계" },
+        { id: "stat_speed_7", name: "⚡ 번개 벼락의 파편", statType: "speed", amount: 7, effect: "주문 시전 속도와 기습 대응력 증폭" },
+        { id: "stat_luck_9", name: "🍀 펠릭스 펠리시스 코팅", statType: "luck", amount: 9, effect: "스피드 퀴즈 및 미션 성공 확률 비약적 상승" },
+        { id: "stat_curse_5", name: "🌑 세스트랄의 흑마법 핵", statType: "curse", amount: 5, effect: "보이지 않는 죽음의 마력과 저주 부여" }
+    ];
+
+    var state = {};
+    var statPool = [];
+    var logs = [];
+    var tempUploadedImgBase64 = "";
+
+    function loadData() {
+        try {
+            var raw = localStorage.getItem("wand_vault_multistat_v1");
+            if (raw) {
+                var parsed = JSON.parse(raw);
+                state = parsed.state || {};
+                statPool = parsed.statPool || DEFAULT_STAT_POOL.slice();
+                logs = parsed.logs || [];
+            } else {
+                initDefault();
+            }
+        } catch (e) {
+            initDefault();
+        }
+
+        // 28명 멤버 무결성 확인 및 5종 세부 스탯 초기화
+        for (var i = 0; i < DEFAULT_MEMBERS.length; i++) {
+            var name = DEFAULT_MEMBERS[i];
+            if (!state[name]) {
+                state[name] = createDefaultMemberData(name);
+            } else {
+                // 구버전 데이터 호환 보정
+                if (!state[name].baseStats) {
+                    state[name].baseStats = { mana: 5, curse: 2, defense: 4, speed: 3, luck: 3 };
+                }
+                if (!state[name].items) {
+                    state[name].items = [];
+                }
+            }
+        }
+    }
+
+    function createDefaultMemberData(name) {
+        return {
+            wandName: name + "의 수호 지팡이",
+            wandImage: "",
+            baseStats: {
+                mana: 5,     // 🔮 기본 마력
+                curse: 2,    // 💀 저주 강화
+                defense: 4,  // 🛡️ 수호 방어
+                speed: 3,    // ⚡ 영창 속도
+                luck: 3      // 🍀 신비 행운
+            },
+            items: []      // 부여받은 능력치 아이템 목록
+        };
+    }
+
+    function initDefault() {
+        state = {};
+        statPool = JSON.parse(JSON.stringify(DEFAULT_STAT_POOL));
+        logs = [];
+        for (var i = 0; i < DEFAULT_MEMBERS.length; i++) {
+            var name = DEFAULT_MEMBERS[i];
+            state[name] = createDefaultMemberData(name);
+        }
+        saveData();
+    }
+
+    function saveData() {
+        try {
+            localStorage.setItem("wand_vault_multistat_v1", JSON.stringify({
+                state: state,
+                statPool: statPool,
+                logs: logs
+            }));
+        } catch (e) {}
+    }
+
+    function showToast(msg) {
+        var t = document.getElementById("msgToast");
+        t.innerText = msg;
+        t.classList.add("show");
+        setTimeout(function() {
+            t.classList.remove("show");
+        }, 2600);
+    }
+
+    function checkAdmin() {
+        var pw = prompt("🔒 올리밴더 관리자 마법 암호를 입력하세요:");
+        if (pw === ADMIN_PW) {
+            return true;
+        } else {
+            if (pw !== null) showToast("⚠️ 암호가 올바르지 않습니다.");
+            return false;
+        }
+    }
+
+    // 각 세부 스탯 계산 (기본 스탯 + 장착된 아이템의 해당 스탯 합산)
+    function calcMemberStats(d) {
+        var s = {
+            mana: d.baseStats.mana || 0,
+            curse: d.baseStats.curse || 0,
+            defense: d.baseStats.defense || 0,
+            speed: d.baseStats.speed || 0,
+            luck: d.baseStats.luck || 0
+        };
+
+        if (d.items && d.items.length) {
+            for (var i = 0; i < d.items.length; i++) {
+                var it = d.items[i];
+                var type = it.statType || "mana";
+                if (s[type] !== undefined) {
+                    s[type] += (it.amount || 0);
+                }
+            }
+        }
+
+        s.total = s.mana + s.curse + s.defense + s.speed + s.luck;
+        return s;
+    }
+
+    /* 카드 렌더링 */
+    function renderCards(customOrder) {
+        var grid = document.getElementById("wandGrid");
+        var q = document.getElementById("searchInput").value.trim().toLowerCase();
+        var list = customOrder || DEFAULT_MEMBERS;
+        var html = "";
+
+        for (var i = 0; i < list.length; i++) {
+            var name = list[i];
+            var d = state[name];
+            if (!d) continue;
+
+            if (q && name.toLowerCase().indexOf(q) === -1 && d.wandName.toLowerCase().indexOf(q) === -1) {
+                continue;
+            }
+
+            var stats = calcMemberStats(d);
+
+            // 지팡이 외형 사진
+            var wandImageTag = "";
+            if (d.wandImage) {
+                wandImageTag = '<img src="' + d.wandImage + '" class="wand-img" alt="' + d.wandName + '" onerror="this.style.display=\'none\'" />' +
+                    '<div class="wand-img-overlay">📸 지팡이 사진 변경하기</div>';
+            } else {
+                wandImageTag = '<div class="wand-placeholder">' +
+                    '<span class="icon">🪄</span>' +
+                    '<span>[클릭] 내 지팡이 사진 등록하기</span>' +
+                    '</div>' +
+                    '<div class="wand-img-overlay">📸 사진 등록하기</div>';
+            }
+
+            // 세분화된 5대 스탯 바 렌더링
+            var statKeys = ["mana", "curse", "defense", "speed", "luck"];
+            var matrixHtml = "";
+            for (var k = 0; k < statKeys.length; k++) {
+                var key = statKeys[k];
+                var info = STAT_INFO[key];
+                var val = stats[key];
+                // 게이지는 30 기준(30 넘어가면 100%)
+                var barPct = Math.min(100, Math.round((val / 30) * 100));
+
+                matrixHtml += '<div class="stat-row">' +
+                    '<span class="stat-name" style="color:' + info.color + ';">' + info.icon + ' ' + info.label + '</span>' +
+                    '<div class="stat-mini-bar">' +
+                    '<div class="stat-mini-fill ' + info.fillClass + '" style="width:' + barPct + '%;"></div>' +
+                    '</div>' +
+                    '<span class="stat-val-text" style="color:' + info.color + ';">+' + val + '</span>' +
+                    '</div>';
+            }
+
+            // 장착된 능력치(아이템) 칩
+            var itemsHtml = "";
+            if (d.items && d.items.length > 0) {
+                for (var j = 0; j < d.items.length; j++) {
+                    var it = d.items[j];
+                    var itInfo = STAT_INFO[it.statType] || STAT_INFO.mana;
+                    itemsHtml += '<span class="item-chip" onclick="removeItemFromMember(\'' + name + '\', ' + j + ')" title="' + it.effect + ' (클릭 시 회수)">' +
+                        it.name + ' <span class="chip-badge" style="color:' + itInfo.color + ';">' + itInfo.icon + '+' + it.amount + '</span>' +
+                        '</span>';
+                }
+            } else {
+                itemsHtml = '<span class="no-items-text">깃든 능력치가 없습니다. (상단에서 주입)</span>';
+            }
+
+            html += '<div class="wand-card">' +
+                '<div class="card-top">' +
+                '<div class="owner-info">' +
+                '<span class="owner-name">' + name + '</span>' +
+                '<span class="owner-badge">WIZARD</span>' +
+                '</div>' +
+                '<span class="total-power-badge">✨ 종합위력 ' + stats.total + '</span>' +
+                '</div>' +
+
+                /* 지팡이 사진 쇼케이스 */
+                '<div class="wand-visual-box" onclick="openWandImageModal(\'' + name + '\')" title="클릭하여 지팡이 사진을 등록하세요">' +
+                wandImageTag +
+                '</div>' +
+
+                /* 지팡이 명칭 & 기본 스탯 수정 버튼 */
+                '<div class="wand-profile">' +
+                '<span class="wand-spec-text" title="' + d.wandName + '">🪄 ' + d.wandName + '</span>' +
+                '<button class="btn-edit-inline" onclick="openWandEditModal(\'' + name + '\')">세공 / 스탯설정</button>' +
+                '</div>' +
+
+                /* 🌟 세분화된 5대 스탯 게이지 매트릭스 🌟 */
+                '<div class="stats-matrix">' +
+                matrixHtml +
+                '</div>' +
+
+                /* 부여된 능력치 아이템 */
+                '<div class="wand-items-section">' +
+                '<div class="section-title">' +
+                '<span>깃든 능력치 & 부여 아이템</span>' +
+                '<span style="font-size:10px; color:var(--gold);">클릭 시 회수</span>' +
+                '</div>' +
+                '<div class="item-chips-container">' + itemsHtml + '</div>' +
+                '</div>' +
+
+                /* 카드 푸터 */
+                '<div class="card-footer">' +
+                '<span style="font-size:10px; color:#52525b;">Ollivanders Vault</span>' +
+                '<button class="btn-undo" onclick="undoLastItem(\'' + name + '\')">↩️ 마지막 부여 능력치 취소</button>' +
+                '</div>' +
+                '</div>';
+        }
+
+        grid.innerHTML = html;
+        renderLogs();
+    }
+
+    function renderLogs() {
+        var container = document.getElementById("logList");
+        if (logs.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:14px;">아직 기록된 지팡이 조율 내역이 없습니다.</div>';
+            return;
+        }
+
+        var html = "";
+        for (var i = 0; i < logs.length; i++) {
+            var item = logs[i];
+            html += '<div class="log-item">' +
+                '<div>' +
+                '<span class="log-target">[' + item.target + ']</span>' +
+                '<span class="log-desc">' + item.detail + '</span>' +
+                '</div>' +
+                '<span class="log-time">' + item.time + '</span>' +
+                '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function addLog(target, detail) {
+        var now = new Date();
+        var timeStr = (now.getMonth() + 1) + "월 " + now.getDate() + "일 " +
+            String(now.getHours()).padStart(2, '0') + ":" +
+            String(now.getMinutes()).padStart(2, '0');
+
+        logs.unshift({ target: target, detail: detail, time: timeStr });
+        if (logs.length > 60) logs.pop();
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+    }
+
+    /* === 1. 공통 능력치 주입 로직 (스탯 세분화 반영) === */
+    function openAssignModal() {
+        var mSelect = document.getElementById("assignMemberSelect");
+        mSelect.innerHTML = "";
+        for (var i = 0; i < DEFAULT_MEMBERS.length; i++) {
+            var m = DEFAULT_MEMBERS[i];
+            var opt = document.createElement("option");
+            opt.value = m;
+            opt.innerText = m + " (" + state[m].wandName + ")";
+            mSelect.appendChild(opt);
+        }
+
+        var iSelect = document.getElementById("assignItemSelect");
+        iSelect.innerHTML = "";
+        for (var j = 0; j < statPool.length; j++) {
+            var item = statPool[j];
+            var info = STAT_INFO[item.statType] || STAT_INFO.mana;
+            var iOpt = document.createElement("option");
+            iOpt.value = j;
+            iOpt.innerText = item.name + " [" + info.icon + " " + info.label + " +" + item.amount + "]";
+            iSelect.appendChild(iOpt);
+        }
+
+        previewSelectedItemDesc();
+        document.getElementById("assignModal").style.display = "flex";
+    }
+
+    function previewSelectedItemDesc() {
+        var iSelect = document.getElementById("assignItemSelect");
+        var idx = parseInt(iSelect.value, 10);
+        var preview = document.getElementById("assignItemPreview");
+        if (!isNaN(idx) && statPool[idx]) {
+            var it = statPool[idx];
+            var info = STAT_INFO[it.statType] || STAT_INFO.mana;
+            preview.innerHTML = '<span style="color:' + info.color + '; font-weight:700;">' + info.icon + ' [' + info.label + ' +' + it.amount + ']</span>' +
+                '<div style="color:#cbd5e1; margin-top:3px;">효능: ' + it.effect + '</div>';
+        } else {
+            preview.innerText = "";
+        }
+    }
+
+    function submitAssignItem() {
+        var mName = document.getElementById("assignMemberSelect").value;
+        var idx = parseInt(document.getElementById("assignItemSelect").value, 10);
+        var selectedItem = statPool[idx];
+
+        if (!mName || !selectedItem) {
+            showToast("멤버와 능력치를 모두 선택해주세요.");
+            return;
+        }
+
+        if (!state[mName].items) state[mName].items = [];
+        state[mName].items.push({
+            name: selectedItem.name,
+            statType: selectedItem.statType,
+            amount: selectedItem.amount,
+            effect: selectedItem.effect
+        });
+
+        var info = STAT_INFO[selectedItem.statType] || STAT_INFO.mana;
+        addLog(mName, "지팡이에 '" + selectedItem.name + "' 깃듦 (" + info.label + " +" + selectedItem.amount + ")");
+        saveData();
+        renderCards();
+        closeModal("assignModal");
+        showToast("✨ [" + mName + "] 지팡이에 " + info.label + " +" + selectedItem.amount + " 능력이 깃들었습니다!");
+    }
+
+    function removeItemFromMember(memberName, itemIdx) {
+        var item = state[memberName].items[itemIdx];
+        if (!item) return;
+
+        var info = STAT_INFO[item.statType] || STAT_INFO.mana;
+        if (confirm("[" + memberName + "] 지팡이에서 '" + item.name + " (" + info.label + " +" + item.amount + ")' 능력을 회수하시겠습니까?")) {
+            state[memberName].items.splice(itemIdx, 1);
+            addLog(memberName, "'" + item.name + "' 능력 회수됨");
+            saveData();
+            renderCards();
+            showToast("능력이 회수되었습니다.");
+        }
+    }
+
+    function undoLastItem(memberName) {
+        if (!state[memberName].items || state[memberName].items.length === 0) {
+            showToast("취소할 능력치가 없습니다.");
+            return;
+        }
+        var removed = state[memberName].items.pop();
+        addLog(memberName, "마지막 능력치 '" + removed.name + "' 회수됨");
+        saveData();
+        renderCards();
+        showToast("✨ [" + removed.name + "] 능력이 회수되었습니다.");
+    }
+
+    /* === 2. 지팡이 이름 및 세부 기본 스탯 수정 === */
+    function openWandEditModal(memberName) {
+        var d = state[memberName];
+        document.getElementById("wandEditTitle").innerText = "⚙️ [" + memberName + "] 지팡이 세공 & 초기 스탯";
+        document.getElementById("editMemberName").value = memberName;
+        document.getElementById("editWandName").value = d.wandName || "";
+
+        var bs = d.baseStats || { mana: 5, curse: 2, defense: 4, speed: 3, luck: 3 };
+        document.getElementById("editBaseMana").value = bs.mana;
+        document.getElementById("editBaseCurse").value = bs.curse;
+        document.getElementById("editBaseDefense").value = bs.defense;
+        document.getElementById("editBaseSpeed").value = bs.speed;
+        document.getElementById("editBaseLuck").value = bs.luck;
+
+        document.getElementById("wandEditModal").style.display = "flex";
+    }
+
+    function saveWandProfile() {
+        var name = document.getElementById("editMemberName").value;
+        var wName = document.getElementById("editWandName").value.trim();
+
+        if (!wName) {
+            showToast("지팡이 이름을 입력해주세요.");
+            return;
+        }
+
+        state[name].wandName = wName;
+        state[name].baseStats = {
+            mana: parseInt(document.getElementById("editBaseMana").value, 10) || 0,
+            curse: parseInt(document.getElementById("editBaseCurse").value, 10) || 0,
+            defense: parseInt(document.getElementById("editBaseDefense").value, 10) || 0,
+            speed: parseInt(document.getElementById("editBaseSpeed").value, 10) || 0,
+            luck: parseInt(document.getElementById("editBaseLuck").value, 10) || 0
+        };
+
+        addLog(name, "지팡이 명칭 & 기본 스탯 각인 완료 (" + wName + ")");
+        saveData();
+        renderCards();
+        closeModal("wandEditModal");
+        showToast("✨ 지팡이 설정이 저장되었습니다.");
+    }
+
+    /* === 3. 지팡이 사진 등록/수정 로직 === */
+    function openWandImageModal(memberName) {
+        tempUploadedImgBase64 = "";
+        document.getElementById("imgUploadMemberName").value = memberName;
+        document.getElementById("wandImageModalTitle").innerText = "📸 [" + memberName + "] 지팡이 사진 등록";
+        document.getElementById("localWandFileInput").value = "";
+
+        var currentImg = state[memberName].wandImage || "";
+        document.getElementById("imgUrlInput").value = currentImg.startsWith("data:") ? "" : currentImg;
+
+        var preview = document.getElementById("modalImgPreview");
+        var placeholder = document.getElementById("modalImgPlaceholder");
+
+        if (currentImg) {
+            preview.src = currentImg;
+            preview.style.display = "block";
+            placeholder.style.display = "none";
+        } else {
+            preview.src = "";
+            preview.style.display = "none";
+            placeholder.style.display = "block";
+        }
+
+        document.getElementById("wandImageModal").style.display = "flex";
+    }
+
+    function handleLocalImageUpload(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var img = new Image();
+            img.onload = function() {
+                var canvas = document.createElement("canvas");
+                var maxW = 600;
+                var scale = Math.min(1, maxW / img.width);
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+
+                var ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                tempUploadedImgBase64 = canvas.toDataURL("image/jpeg", 0.75);
+
+                var preview = document.getElementById("modalImgPreview");
+                var placeholder = document.getElementById("modalImgPlaceholder");
+                preview.src = tempUploadedImgBase64;
+                preview.style.display = "block";
+                placeholder.style.display = "none";
+                document.getElementById("imgUrlInput").value = "";
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function previewImageFromUrl() {
+        var url = document.getElementById("imgUrlInput").value.trim();
+        var preview = document.getElementById("modalImgPreview");
+        var placeholder = document.getElementById("modalImgPlaceholder");
+
+        if (url) {
+            tempUploadedImgBase64 = "";
+            preview.src = url;
+            preview.style.display = "block";
+            placeholder.style.display = "none";
+        }
+    }
+
+    function saveWandImage() {
+        var name = document.getElementById("imgUploadMemberName").value;
+        var urlVal = document.getElementById("imgUrlInput").value.trim();
+        var finalImg = tempUploadedImgBase64 || urlVal;
+
+        state[name].wandImage = finalImg;
+        addLog(name, "지팡이 외형 사진 갱신");
+        saveData();
+        renderCards();
+        closeModal("wandImageModal");
+        showToast("✨ 지팡이 사진이 등록되었습니다!");
+    }
+
+    function clearWandImage() {
+        var name = document.getElementById("imgUploadMemberName").value;
+        state[name].wandImage = "";
+        addLog(name, "지팡이 사진 제거됨");
+        saveData();
+        renderCards();
+        closeModal("wandImageModal");
+        showToast("지팡이 사진이 초기화되었습니다.");
+    }
+
+    /* === 4. 관리자: 세분화된 스탯 아이템 풀 관리 === */
+    function openManageStatItemsModal() {
+        if (!checkAdmin()) return;
+        renderStatItemList();
+        document.getElementById("newStatName").value = "";
+        document.getElementById("newStatAmount").value = "";
+        document.getElementById("newStatEffect").value = "";
+        document.getElementById("statManageModal").style.display = "flex";
+    }
+
+    function renderStatItemList() {
+        var container = document.getElementById("statItemList");
+        var html = "";
+        for (var i = 0; i < statPool.length; i++) {
+            var it = statPool[i];
+            var info = STAT_INFO[it.statType] || STAT_INFO.mana;
+            html += '<div style="display:flex; justify-content:space-between; align-items:center; background:#090a12; padding:8px 10px; border-radius:6px; font-size:12px; border:1px solid #332b1d;">' +
+                '<div>' +
+                '<span style="font-weight:700; color:var(--gold-light);">' + it.name + '</span> ' +
+                '<span style="color:' + info.color + '; font-weight:700; font-size:11px;">[' + info.icon + ' ' + info.label + ' +' + it.amount + ']</span> - ' +
+                '<span style="color:#cbd5e1; font-size:11px;">' + it.effect + '</span>' +
+                '</div>' +
+                '<button class="btn-edit-inline" style="color:#f87171;" onclick="deleteStatItem(' + i + ')">삭제</button>' +
+                '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function addNewStatItem() {
+        var name = document.getElementById("newStatName").value.trim();
+        var type = document.getElementById("newStatType").value;
+        var amount = parseInt(document.getElementById("newStatAmount").value, 10) || 0;
+        var effect = document.getElementById("newStatEffect").value.trim();
+
+        if (!name) {
+            showToast("능력치 명칭을 입력해주세요.");
+            return;
+        }
+        if (amount <= 0) {
+            showToast("수치는 1 이상이어야 합니다.");
+            return;
+        }
+
+        statPool.push({
+            id: "stat_" + Date.now(),
+            name: name,
+            statType: type,
+            amount: amount,
+            effect: effect || "미션 특수 효과"
+        });
+
+        saveData();
+        renderStatItemList();
+        document.getElementById("newStatName").value = "";
+        document.getElementById("newStatAmount").value = "";
+        document.getElementById("newStatEffect").value = "";
+        showToast("✨ 신규 능력치가 풀에 등록되었습니다.");
+    }
+
+    function deleteStatItem(idx) {
+        if (confirm("'" + statPool[idx].name + "' 항목을 풀에서 삭제할까요?")) {
+            statPool.splice(idx, 1);
+            saveData();
+            renderStatItemList();
+            showToast("항목이 삭제되었습니다.");
+        }
+    }
+
+    /* 스탯별 정렬 & 내보내기 & 초기화 */
+    function sortCards() {
+        var crit = document.getElementById("sortCriteriaSelect").value;
+        var sorted = DEFAULT_MEMBERS.slice().sort(function(a, b) {
+            var sA = calcMemberStats(state[a]);
+            var sB = calcMemberStats(state[b]);
+
+            if (crit === "total") return sB.total - sA.total;
+            return sB[crit] - sA[crit];
+        });
+        renderCards(sorted);
+        var critName = crit === "total" ? "종합 위력" : STAT_INFO[crit].label;
+        showToast("🏆 " + critName + "순 정렬 완료!");
+    }
+
+    function exportData() {
+        var payload = JSON.stringify({ state: state, statPool: statPool, logs: logs }, null, 2);
+        if (document.execCommand) {
+            var ta = document.createElement("textarea");
+            ta.value = payload;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            showToast("💾 보관소 전체 장부 데이터가 복사되었습니다!");
+        } else {
+            prompt("아래 텍스트를 복사하세요:", payload);
+        }
+    }
+
+    function resetAllData() {
+        if (!checkAdmin()) return;
+        if (confirm("모든 멤버의 지팡이 스탯, 장착 아이템, 사진, 히스토리를 최초 상태로 리셋하시겠습니까?")) {
+            try { localStorage.removeItem("wand_vault_multistat_v1"); } catch(e) {}
+            initDefault();
+            renderCards();
+            showToast("🔄 지팡이 보관소가 초기화되었습니다.");
+        }
+    }
+
+    // 실행
+    loadData();
+    renderCards();
+</script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>호그와트 로비 : Only for Legitimate Witches</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f5f3ff;
+            background-image:
+                radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.20) 0, transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(217, 70, 239, 0.14) 0, transparent 40%),
+                radial-gradient(circle at 85% 15%, rgba(251, 191, 36, 0.12) 0, transparent 35%);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(30, 0, 60, 0.10);
+            overflow: hidden;
+        }
+
+        /* 헤더 배너 */
+        .hero {
+            position: relative;
+            padding: 28px 25px 30px;
+            background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 55%, #a855f7 100%);
+            color: #ffffff;
+            overflow: hidden;
+        }
+        .hero::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -1px;
+            height: 22px;
+            background: #ffffff;
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+        }
+        .hero-wave {
+            font-size: 2.2rem;
+            display: inline-block;
+            animation: bob 2.4s ease-in-out infinite;
+        }
+        @keyframes bob {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-4px) rotate(-6deg); }
+        }
+        .hero h1 {
+            margin: 6px 0 4px;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .hero p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .bubble.b1 { width: 120px; height: 120px; top: -40px; right: -30px; }
+        .bubble.b2 { width: 60px; height: 60px; top: 50px; right: 70px; }
+        .bubble.b3 { width: 24px; height: 24px; top: 24px; right: 150px; }
+
+        /* 버튼 목록 */
+        .list {
+            padding: 8px 25px 20px;
+        }
+        .section-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #a78bfa;
+            letter-spacing: 0.04em;
+            margin: 18px 2px 10px;
+        }
+        .section-label:first-child {
+            margin-top: 4px;
+        }
+        .link-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #faf5ff;
+            border: 1px solid #ede9fe;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s, background-color 0.15s;
+            animation: rise 0.45s ease backwards;
+        }
+        .link-btn:nth-of-type(2) { animation-delay: 0.07s; }
+        .link-btn:nth-of-type(3) { animation-delay: 0.14s; }
+        .link-btn:nth-of-type(4) { animation-delay: 0.21s; }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .link-btn:hover,
+        .link-btn:focus-visible {
+            outline: none;
+            border-color: #8b5cf6;
+            background-color: #f3e8ff;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+            transform: translateY(-1px);
+        }
+        .link-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 버튼별 아이콘 타일 */
+        .icon {
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: var(--tint, #ede9fe);
+        }
+        .tint-violet { --tint: #ede9fe; }
+        .tint-amber  { --tint: #fef3c7; }
+        .tint-rose   { --tint: #fce7f3; }
+        .tint-teal   { --tint: #ccfbf1; }
+
+        .text {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .title {
+            font-weight: 700;
+            font-size: 0.98rem;
+            color: #2e1065;
+            line-height: 1.3;
+        }
+        .desc {
+            font-size: 0.76rem;
+            font-weight: 400;
+            color: #a78bfa;
+            line-height: 1.3;
+        }
+        .arrow {
+            color: #a78bfa;
+            font-size: 1.1rem;
+        }
+        .link-btn:hover .title,
+        .link-btn:hover .arrow {
+            color: #6d28d9;
+        }
+        .link-btn:hover .desc {
+            color: #a855f7;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.78rem;
+            color: #a78bfa;
+            padding: 0 25px 22px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-wave, .link-btn {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="hero">
+        <span class="bubble b1"></span>
+        <span class="bubble b2"></span>
+        <span class="bubble b3"></span>
+        <span class="hero-wave">🪄</span>
+        <h1>For Witches</h1>
+        <p>축하합니다! 마침내 올빼미가 편지를 전달했군요</p>
+    </header>
+
+    <main class="list">
+        <div class="section-label">🏰 호그와트 바로가기</div>
+
+        <a class="link-btn" href="houseBoard.html">
+            <span class="icon tint-amber">🏰</span>
+            <span class="text">
+                <span class="title">기숙사 모래시계</span>
+                <span class="desc">4대 기숙사 출석 & 버터맥주 히스토리</span>
+            </span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="link-btn" href="ollivanders.html">
+            <span class="icon tint-violet">🪄</span>
+            <span class="text">
+                <span class="title">올리밴더의 지팡이 보관소</span>
+                <span class="desc">지팡이 능력치 부여 & 마력 각성 장부</span>
+            </span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="link-btn" href="weasleysWheezes.html">
+            <span class="icon tint-rose">🎪</span>
+            <span class="text">
+                <span class="title">위즐리 장난감 상점</span>
+                <span class="desc">기발한 마법 아이템 상점</span>
+            </span>
+            <span class="arrow">›</span>
+        </a>
+
+        <a class="link-btn" href="waraudersMap.html">
+            <span class="icon tint-teal">🗺️</span>
+            <span class="text">
+                <span class="title">와루더즈 맵</span>
+                <span class="desc">나는 천하의 멍텅구리임을 엄숙하게 선언합니다</span>
+            </span>
+            <span class="arrow">›</span>
+        </a>
+    </main>
+
+    <footer>킹스 크로스역 9와 3/4 승강장</footer>
+</div>
+
+</body>
+</html>
