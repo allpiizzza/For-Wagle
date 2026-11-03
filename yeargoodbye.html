@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2026 올해의 책</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
+        body {
+            background-color: #f1f5f9;
+            background-image:
+                radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.18) 0, transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.15) 0, transparent 40%),
+                radial-gradient(circle at 85% 15%, rgba(251, 146, 60, 0.12) 0, transparent 35%);
+            background-attachment: fixed;
+        }
+        .card-hover:hover { transform: scale(1.05); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 font-sans">
+
+<!-- ===== 메인 페이지 ===== -->
+<div id="page-main" class="flex flex-col items-center p-4 md:p-8">
+    <div class="mt-8 md:mt-16 mb-4 text-center">
+        <h1 class="text-3xl md:text-5xl font-bold mb-2 text-gray-900">2026 올해의 책</h1>
+        <p class="text-gray-500 text-sm mb-4">올 한 해를 함께한 책들을 선정해보세요</p>
+        <input id="nickname" type="text" maxlength="20" placeholder="이름을 입력하세요"
+               class="w-full max-w-xs mx-auto px-5 py-3 rounded-xl bg-white border border-gray-300 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#e94560] text-center shadow-sm" />
+    </div>
+
+    <div id="cards" class="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-10"></div>
+
+    <div class="w-full max-w-sm flex flex-col gap-3 mb-8">
+        <button onclick="submitResult()"
+                class="w-full py-3 bg-[#e94560] hover:bg-[#c73652] disabled:opacity-40 text-white font-bold rounded-xl transition cursor-pointer">
+            제출하기
+        </button>
+    </div>
+
+
+</div>
+
+<!-- ===== 제출 완료 페이지 ===== -->
+<div id="page-done" class="hidden flex flex-col items-center justify-center min-h-screen p-4 gap-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900">제출 완료!</h1>
+    <div id="done-card"></div>
+    <button onclick="downloadImage()"
+            class="px-6 py-3 bg-[#e94560] hover:bg-[#c73652] text-white font-semibold rounded-xl transition cursor-pointer">
+        이미지로 다운로드
+    </button>
+</div>
+
+<!-- ===== 검색 모달 ===== -->
+<div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onclick="closeModal()">
+    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl" onclick="event.stopPropagation()">
+        <div class="p-5 border-b border-gray-100">
+            <h3 id="modal-title" class="text-lg font-bold text-gray-900 mb-3"></h3>
+            <input id="search-input" type="text" placeholder="책 제목을 검색하세요..."
+                   class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#e94560] text-gray-800 text-sm" />
+        </div>
+        <div id="search-results" class="overflow-y-auto flex-1 p-3"></div>
+        <div class="p-3 border-t border-gray-100">
+            <button onclick="closeModal()" class="w-full py-2.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== 설정 =====
+    const KAKAO_API_KEY = '0ad7fb045567128a896aeedd5ebc429e';
+
+    const SUPABASE_URL = 'https://skpmxrgewpdmlvckzekh.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_1dV_gRdjg3NTWyBiD56t_A_BH-HESQ6';
+    let sb = null;
+    try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { db: { schema: 'yearly' } }); } catch(e) { console.warn('Supabase 초기화 실패:', e); }
+    const TABLE = 'book_of_the_year';
+
+    // ===== 상태 =====
+    const CATEGORIES = ['올해의 책', '올해의 도전 책', '올해의 프로책', '올해의 실망책', '올해의 유익한 책'];
+    const selected = {};
+    let activeCategory = null;
+    let searchTimer = null;
+
+    // ===== 이미지 프록시 (카카오 CDN이 CORS 미지원 → 프록시로 우회해 표시/다운로드 모두 가능) =====
+    function proxyImg(url) {
+        if (!url) return '';
+        return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
+    }
+
+    // ===== 페이지 전환 =====
+    function showPage(name) {
+        document.querySelectorAll('[id^="page-"]').forEach(el => el.classList.add('hidden'));
+        document.getElementById('page-' + name).classList.remove('hidden');
+    }
+
+    // ===== 카드 렌더링 =====
+    function renderCards() {
+        const container = document.getElementById('cards');
+        container.innerHTML = CATEGORIES.map((cat, i) => {
+            const book = selected[cat];
+            return `
+      <button onclick="openModal('${cat}')" class="group flex flex-col items-center cursor-pointer">
+        <div class="relative w-[120px] h-[170px] md:w-[140px] md:h-[200px] rounded-lg overflow-hidden shadow-lg transition-transform card-hover">
+          ${book
+                ? `<img src="${proxyImg(book.thumbnail)}" alt="${book.title}" class="w-full h-full object-cover" crossorigin="anonymous" />`
+                : `<div class="w-full h-full bg-slate-50 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-2">
+                <span class="text-3xl text-slate-300 font-bold">${i + 1}</span>
+                <span class="text-xs text-slate-400">클릭하여 검색</span>
+              </div>`}
+        </div>
+        <div class="mt-2 text-center max-w-[140px]">
+          <p class="text-[11px] font-semibold text-[#2563eb] tracking-wide">${cat}</p>
+          ${book ? `<p class="text-[11px] text-slate-600 truncate mt-0.5">${book.title}</p>` : ''}
+        </div>
+      </button>`;
+        }).join('');
+
+    }
+
+    // ===== 결과 카드 HTML =====
+    function buildResultCard(nickname, books) {
+        return `
+    <div class="result-card w-[380px] md:w-[600px] rounded-2xl p-6 md:p-8"
+         style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)">
+      <h2 class="text-center text-white text-xl md:text-2xl font-bold mb-1">2026 올해의 Book</h2>
+      <p class="text-center text-[#f5c518] text-sm mb-6">by ${nickname}</p>
+      <div class="grid grid-cols-5 gap-2 md:gap-4">
+        ${books.map(b => `
+          <div class="flex flex-col items-center">
+            <div class="w-[56px] h-[80px] md:w-[90px] md:h-[128px] rounded-md overflow-hidden shadow-lg">
+              ${b.thumbnail
+            ? `<img src="${proxyImg(b.thumbnail)}" class="w-full h-full object-cover" crossorigin="anonymous" />`
+            : `<div class="w-full h-full bg-white/10"></div>`}
+            </div>
+            <p class="text-[8px] md:text-[10px] text-[#f5c518] font-semibold mt-1.5 text-center leading-tight">${b.category}</p>
+            <p class="text-[7px] md:text-[9px] text-white/70 text-center truncate w-full mt-0.5">${b.title}</p>
+          </div>`).join('')}
+      </div>
+    </div>`;
+    }
+
+    // ===== 검색 모달 =====
+    function openModal(category) {
+        activeCategory = category;
+        document.getElementById('modal-title').textContent = category;
+        document.getElementById('search-input').value = '';
+        document.getElementById('search-results').innerHTML = '';
+        document.getElementById('modal').classList.remove('hidden');
+        document.getElementById('search-input').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.add('hidden');
+        activeCategory = null;
+    }
+
+    document.getElementById('search-input').addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        const q = this.value.trim();
+        if (!q) { document.getElementById('search-results').innerHTML = ''; return; }
+        searchTimer = setTimeout(() => searchBooks(q), 300);
+    });
+
+    async function searchBooks(query) {
+        const container = document.getElementById('search-results');
+        container.innerHTML = '<p class="text-center text-gray-400 py-8">검색 중...</p>';
+        try {
+            const res = await fetch(`https://dapi.kakao.com/v3/search/book?query=${encodeURIComponent(query)}&size=10`, {
+                headers: { Authorization: `KakaoAK ${KAKAO_API_KEY}` }
+            });
+            const data = await res.json();
+            if (!data.documents?.length) {
+                container.innerHTML = '<p class="text-center text-gray-400 py-8">검색 결과가 없습니다</p>';
+                return;
+            }
+            container.innerHTML = data.documents.map((doc, i) => `
+      <button onclick='pickBook(${JSON.stringify({ title: doc.title, authors: doc.authors, thumbnail: doc.thumbnail }).replace(/'/g, "&#39;")})'
+        class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition text-left cursor-pointer">
+        ${doc.thumbnail
+                ? `<img src="${doc.thumbnail}" class="w-12 h-16 object-cover rounded shadow-sm flex-shrink-0" />`
+                : `<div class="w-12 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400 flex-shrink-0">No img</div>`}
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-gray-900 truncate">${doc.title}</p>
+          <p class="text-xs text-gray-500 truncate">${(doc.authors || []).join(', ')}</p>
+          <p class="text-xs text-gray-400">${doc.publisher || ''}</p>
+        </div>
+      </button>`).join('');
+        } catch (e) {
+            container.innerHTML = '<p class="text-center text-red-400 py-8">검색에 실패했습니다</p>';
+        }
+    }
+
+    function pickBook(book) {
+        selected[activeCategory] = { category: activeCategory, ...book };
+        closeModal();
+        renderCards();
+    }
+
+    // ===== 제출 (Supabase) =====
+    async function submitResult() {
+        const nickname = document.getElementById('nickname').value.trim();
+        if (!nickname) { alert('이름을 입력하세요'); return; }
+        const books = CATEGORIES.map(c => selected[c] || { category: c, title: '', thumbnail: '' });
+        try {
+            const { error } = await sb.from(TABLE).insert({ nickname, books });
+            if (error) throw error;
+            document.getElementById('done-card').innerHTML = buildResultCard(nickname, books);
+            showPage('done');
+        } catch (e) {
+            alert('저장에 실패했습니다. 다시 시도해주세요.');
+        }
+    }
+
+    // ===== 이미지 다운로드 =====
+    async function downloadImage() {
+        const card = document.querySelector('#done-card .result-card');
+        if (!card) return;
+        const canvas = await html2canvas(card, { backgroundColor: null, useCORS: true, scale: 2 });
+        const a = document.createElement('a');
+        a.download = 'book-of-the-year-2026.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+    }
+
+    // ===== 초기화 =====
+    renderCards();
+</script>
+</body>
+</html>
