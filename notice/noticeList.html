@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>어바웃 와글</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            background-image:
+                radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.18) 0, transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.15) 0, transparent 40%);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .hero {
+            position: relative;
+            padding: 20px 25px 30px;
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #60a5fa 100%);
+            color: #ffffff;
+        }
+        .back {
+            display: inline-block;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .back:hover { opacity: 1; }
+        .hero h1 {
+            margin: 0 0 4px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .hero p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .list {
+            padding: 20px 25px;
+        }
+        .empty {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            padding: 40px 0;
+        }
+        .notice-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+        }
+        .notice-item:hover,
+        .notice-item:focus-visible {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .notice-icon {
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: #fef3c7;
+        }
+        .notice-icon.tint-green { background: #dcfce7; }
+        .notice-icon.tint-blue { background: #dbeafe; }
+        .notice-icon.tint-yellow { background: #fef9c3; }
+        .notice-icon.tint-pink { background: #fce7f3; }
+        .notice-text {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .notice-title {
+            font-weight: 700;
+            font-size: 0.98rem;
+            color: #1e293b;
+        }
+        .notice-desc {
+            word-break: keep-all;
+            font-size: 0.76rem;
+            color: #94a3b8;
+        }
+        .notice-arrow {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.78rem;
+            color: #94a3b8;
+            padding: 0 25px 22px;
+        }
+        /* 작은 폰: 바깥 여백 줄이기 */
+        @media (max-width: 400px) {
+            body { padding: 12px; }
+            .hero { padding-left: 20px; padding-right: 20px; }
+            .list { padding: 16px 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="hero">
+        <a class="back" href="../index.html">‹ 홈으로</a>
+        <h1>어바웃 와글</h1>
+        <p>와글와글 독서모임 소개와 공지</p>
+    </header>
+
+    <main class="list">
+        <a class="notice-item" href="gongji.html">
+            <span class="notice-icon">📌</span>
+            <span class="notice-text">
+                <span class="notice-title">필독 공지</span>
+                <span class="notice-desc">페널티 · 휴식기 · 오프라인 룰 · 총대 지침서</span>
+            </span>
+            <span class="notice-arrow">›</span>
+        </a>
+
+        <a class="notice-item" href="forStarter.html">
+            <span class="notice-icon tint-green">🌱</span>
+            <span class="notice-text">
+                <span class="notice-title">입문자들을 위한 입문서</span>
+                <span class="notice-desc">와글이 처음이라면 여기부터!</span>
+            </span>
+            <span class="notice-arrow">›</span>
+        </a>
+
+        <a class="notice-item" href="2026program.html">
+            <span class="notice-icon tint-yellow">🐴</span>
+            <span class="notice-text">
+                <span class="notice-title">2026 온라인 프로그램</span>
+                <span class="notice-desc">올해 진행하는 온라인 프로그램 안내</span>
+            </span>
+            <span class="notice-arrow">›</span>
+        </a>
+
+        <a class="notice-item" href="2027program.html">
+            <span class="notice-icon tint-pink">🐑</span>
+            <span class="notice-text">
+                <span class="notice-title">2027 온라인 프로그램</span>
+                <span class="notice-desc">내년에 진행하는 온라인 프로그램 안내</span>
+            </span>
+            <span class="notice-arrow">›</span>
+        </a>
+    </main>
+
+    <footer>오늘도 와글와글 📚</footer>
+</div>
+
+</body>
+</html>
