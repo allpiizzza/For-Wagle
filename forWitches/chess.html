@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>마법사의 체스판: 4대 기숙사 영토점령전 & 도파민 맞짱 배틀</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['"Cinzel"', 'serif'],
+                        serifKo: ['"Noto Serif KR"', 'serif'],
+                    },
+                    colors: {
+                        hogwarts: {
+                            bg: '#07090f',
+                            surface: '#111524',
+                            card: '#161c30',
+                            border: '#2b3652',
+                            gold: '#f59e0b',
+                            goldLight: '#fde047',
+                            gryf: '#7a1419',
+                            gryfLight: '#ef4444',
+                            slyth: '#123d30',
+                            slythLight: '#10b981',
+                            raven: '#142f57',
+                            ravenLight: '#3b82f6',
+                            huff: '#8a6400',
+                            huffLight: '#eab308',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #07090f;
+            background-image:
+                    radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 60%),
+                    radial-gradient(circle at 10% 90%, rgba(122, 20, 25, 0.2) 0%, transparent 45%),
+                    radial-gradient(circle at 90% 90%, rgba(18, 61, 48, 0.2) 0%, transparent 45%);
+            color: #e2e8f0;
+            font-family: 'Noto Serif KR', serif;
+            overflow-x: hidden;
+        }
+        .wood-border {
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 0 14px 40px rgba(0,0,0,0.85);
+            border: 7px solid #362013;
+            outline: 2px solid #d4af37;
+        }
+        .chess-cell {
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .chess-cell:hover {
+            filter: brightness(1.3);
+            z-index: 10;
+            transform: scale(1.05);
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #2b3652;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #f59e0b;
+        }
+
+        @keyframes screenShake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            15% { transform: translate(-8px, 6px) rotate(-1.5deg); }
+            30% { transform: translate(7px, -6px) rotate(1.2deg); }
+            45% { transform: translate(-6px, 4px) rotate(-1deg); }
+            60% { transform: translate(5px, -3px) rotate(0.8deg); }
+            75% { transform: translate(-3px, 2px) rotate(-0.4deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .shake-active {
+            animation: screenShake 0.65s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes slashSweep {
+            0% { transform: translate(-80px, -80px) rotate(-35deg) scale(0.6); opacity: 0; }
+            30% { opacity: 1; filter: drop-shadow(0 0 20px #fff); }
+            70% { transform: translate(60px, 60px) rotate(-15deg) scale(1.3); opacity: 0.9; }
+            100% { transform: translate(120px, 120px) rotate(-5deg) scale(1); opacity: 0; }
+        }
+        .slash-anim {
+            animation: slashSweep 0.5s ease-out forwards;
+        }
+
+        @keyframes pieceCrackRumble {
+            0% { transform: scale(1); filter: contrast(1); }
+            20% { transform: scale(1.1) rotate(6deg); filter: contrast(1.5) drop-shadow(0 0 15px rgba(255,255,255,0.8)); }
+            40% { transform: scale(0.95) rotate(-6deg); }
+            60% { transform: scale(1.05) rotate(4deg); }
+            80% { transform: scale(0.9) rotate(-3deg); opacity: 0.8; }
+            100% { transform: scale(0.3) rotate(15deg); opacity: 0; }
+        }
+        .piece-shatter {
+            animation: pieceCrackRumble 0.85s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+    </style>
+</head>
+<body id="mainBody" class="min-h-screen py-6 px-3 sm:px-6">
+
+<div class="max-w-7xl mx-auto">
+    <!-- 헤더 -->
+    <header class="text-center mb-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hogwarts-card border border-hogwarts-gold/40 text-hogwarts-gold text-xs tracking-widest font-cinzel mb-2">
+            <span>⚡ WIZARD'S CHESS BATTLE & DOPAMINE VOTE ⚡</span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-black text-hogwarts-gold font-cinzel tracking-wide drop-shadow-md">
+            마법사의 체스판 : 4대 기숙사 영토점령전
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            《마법사의 돌》 실감 체스 격파 연출 • 도파민 폭발 카톡 투표 맞짱 & 12시간 턴제 공방전
+        </p>
+    </header>
+
+    <!-- 4대 기숙사 점령 현황 바 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" id="houseStatsBar"></div>
+
+    <!-- 컨트롤 & 액션 툴바 -->
+    <div class="flex flex-wrap items-center justify-between gap-3 bg-hogwarts-surface border border-hogwarts-border rounded-xl p-3 sm:p-4 mb-6 shadow-xl">
+        <div class="flex items-center gap-3">
+            <label class="text-xs font-bold text-hogwarts-gold">내 기숙사:</label>
+            <select id="currentHouseSelector" onchange="setCurrentHouse(this.value)" class="bg-hogwarts-card border border-hogwarts-border rounded-lg text-xs sm:text-sm px-3 py-1.5 text-white font-bold focus:outline-none focus:border-hogwarts-gold">
+                <option value="gryffindor">🦁 그리핀도르 (A1~B2 본진)</option>
+                <option value="slytherin">🐍 슬리데린 (G7~H8 본진)</option>
+                <option value="ravenclaw">🦅 래번클로 (A7~B8 본진)</option>
+                <option value="hufflepuff">🦡 후플푸프 (G1~H2 본진)</option>
+            </select>
+            <button onclick="toggleAudio()" id="audioToggleBtn" class="px-2.5 py-1 bg-hogwarts-card border border-slate-700 hover:border-hogwarts-gold text-[11px] rounded-lg text-slate-300 flex items-center gap-1 transition">
+                <span id="audioIcon">🔊</span> <span id="audioStatusText">사운드 ON</span>
+            </button>
+        </div>
+
+        <div class="flex items-center flex-wrap gap-2">
+            <button onclick="openVoteMatchesModal()" class="px-3 py-1.5 bg-gradient-to-r from-purple-700 to-indigo-800 hover:brightness-110 text-white font-bold text-xs rounded-lg shadow-md flex items-center gap-1.5 transition">
+                <span>🗳️</span> <span>카톡 투표 맞짱 6선</span>
+            </button>
+            <button onclick="triggerTestAnimation()" class="px-3 py-1.5 bg-gradient-to-r from-amber-600 to-rose-700 hover:brightness-110 text-white font-bold text-xs rounded-lg shadow-md flex items-center gap-1.5 transition">
+                <span>💥</span> <span>체스말 격파 모션 테스트</span>
+            </button>
+            <button onclick="openRulesModal()" class="px-3 py-1.5 bg-hogwarts-card hover:bg-slate-800 border border-hogwarts-gold/50 text-hogwarts-gold text-xs rounded-lg font-bold transition">
+                📜 룰북
+            </button>
+            <button onclick="exportData()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition">
+                💾 데이터 복사
+            </button>
+            <button onclick="resetDataPrompt()" class="px-3 py-1.5 bg-rose-950/70 hover:bg-rose-900 text-rose-300 text-xs rounded-lg transition">
+                🔄 초기화
+            </button>
+        </div>
+    </div>
+
+    <!-- 메인 레이아웃: 체스판 (좌/중앙) & 배틀/로그 패널 (우) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- 체스판 영역 -->
+        <div class="lg:col-span-7 flex flex-col items-center">
+            <div class="wood-border bg-[#1f150e] p-3 sm:p-5 rounded-2xl w-full max-w-[560px] shadow-2xl relative">
+                <!-- 상단 좌표 (A-H) -->
+                <div class="grid grid-cols-8 text-center text-xs sm:text-sm font-cinzel text-hogwarts-gold font-bold mb-1 pl-6 pr-2">
+                    <div>A</div><div>B</div><div>C</div><div>D</div><div>E</div><div>F</div><div>G</div><div>H</div>
+                </div>
+
+                <div class="flex">
+                    <!-- 좌측 좌표 (8-1) -->
+                    <div class="flex flex-col justify-around text-xs sm:text-sm font-cinzel text-hogwarts-gold font-bold w-6 text-center select-none">
+                        <div>8</div><div>7</div><div>6</div><div>5</div><div>4</div><div>3</div><div>2</div><div>1</div>
+                    </div>
+
+                    <!-- 8x8 그리드 컨테이너 -->
+                    <div id="chessBoard" class="grid grid-cols-8 gap-[2px] bg-[#140e08] p-1 rounded-lg flex-1 aspect-square border border-[#4a2e18]"></div>
+                </div>
+
+                <!-- 범례 -->
+                <div class="flex flex-wrap items-center justify-center gap-3 mt-4 pt-3 border-t border-[#462d1a] text-[11px] text-slate-300">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-hogwarts-gryf border border-rose-400"></span> 그리핀도르</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-hogwarts-slyth border border-emerald-400"></span> 슬리데린</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-hogwarts-raven border border-blue-400"></span> 래번클로</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-hogwarts-huff border border-yellow-400"></span> 후플푸프</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500/30 border border-amber-400 animate-pulse"></span> ⚔️ 12시간 교전중</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 우측 정보창 -->
+        <div class="lg:col-span-5 flex flex-col gap-5">
+            <!-- 실시간 12시간 공방전 카드 -->
+            <div class="bg-hogwarts-surface border border-hogwarts-border rounded-xl p-4 shadow-xl">
+                <div class="flex items-center justify-between mb-3 border-b border-hogwarts-border/60 pb-2">
+                    <h2 class="text-sm font-bold text-hogwarts-gold flex items-center gap-2">
+                        <span>⚔️ 진행 중인 공방 배틀 (12시간 턴)</span>
+                        <span id="activeBattleCountBadge" class="bg-amber-900/60 text-amber-300 text-[10px] px-2 py-0.5 rounded-full border border-amber-600/50">0건</span>
+                    </h2>
+                    <span class="text-[11px] text-slate-400">카톡 투표 or 미션 수행</span>
+                </div>
+                <div id="activeBattlesList" class="space-y-3 max-h-[330px] overflow-y-auto custom-scroll pr-1"></div>
+            </div>
+
+            <!-- 실시간 활동 로그 -->
+            <div class="bg-hogwarts-surface border border-hogwarts-border rounded-xl p-4 shadow-xl flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-3 border-b border-hogwarts-border/60 pb-2">
+                    <h2 class="text-sm font-bold text-hogwarts-gold flex items-center gap-1.5">
+                        <span>📜 점령 & 배틀 실시간 실록</span>
+                    </h2>
+                    <span class="text-[10px] text-slate-400">최근 25건</span>
+                </div>
+                <div id="battleLogContainer" class="space-y-2 overflow-y-auto max-h-[220px] custom-scroll text-xs pr-1"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 시네마틱 오버레이 -->
+<div id="combatCinematicOverlay" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+    <canvas id="particleCanvas" class="absolute inset-0 pointer-events-none w-full h-full"></canvas>
+
+    <div class="relative z-10 max-w-lg w-full text-center flex flex-col items-center">
+        <div class="font-cinzel text-xs tracking-widest text-hogwarts-gold mb-2 border-b border-hogwarts-gold/30 pb-1 w-full">
+            WIZARD'S CHESS DESTRUCTION DUEL
+        </div>
+        <h2 id="cinematicTitle" class="text-2xl sm:text-3xl font-black text-white mb-6 drop-shadow-[0_2px_12px_rgba(245,158,11,0.7)] font-cinzel">
+            체스말 격파 & 영토 쟁탈전
+        </h2>
+
+        <div class="relative w-full h-64 bg-slate-950/80 border-2 border-hogwarts-gold/50 rounded-2xl p-4 flex items-center justify-between overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.9)]">
+            <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-stone-900 via-stone-900/60 to-transparent border-t border-stone-800"></div>
+
+            <div id="cinematicAttackerWrap" class="relative z-10 flex flex-col items-center flex-1 transition-all duration-300">
+                <div id="cinematicAttackerBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full mb-2 bg-rose-950 text-rose-300 border border-rose-600">🦁 공격 기숙사</div>
+                <div class="relative">
+                    <div id="cinematicWeapon" class="absolute -top-10 -right-6 text-4xl sm:text-5xl opacity-0 z-20 pointer-events-none select-none">🗡️</div>
+                    <div id="cinematicAttackerPiece" class="text-6xl sm:text-7xl filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)] select-none">♟️</div>
+                </div>
+                <span id="cinematicAttackerName" class="text-xs font-bold text-slate-300 mt-2 font-cinzel">KNIGHT</span>
+            </div>
+
+            <div class="relative z-20 flex flex-col items-center justify-center w-20">
+                <div id="cinematicClashSign" class="text-3xl opacity-0 font-black text-amber-300 tracking-tighter filter drop-shadow-[0_0_15px_#f59e0b]">💥</div>
+            </div>
+
+            <div id="cinematicDefenderWrap" class="relative z-10 flex flex-col items-center flex-1 transition-all duration-300">
+                <div id="cinematicDefenderBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full mb-2 bg-emerald-950 text-emerald-300 border border-emerald-600">🐍 방어 기숙사</div>
+                <div class="relative">
+                    <div id="cinematicShieldBroken" class="absolute -top-8 -left-4 text-3xl opacity-0 pointer-events-none select-none">🛡️</div>
+                    <div id="cinematicDefenderPiece" class="text-6xl sm:text-7xl filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)] select-none">♜</div>
+                    <div id="cinematicStoneDebris" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 text-xl">🪨 🧱 💥</div>
+                </div>
+                <span id="cinematicDefenderName" class="text-xs font-bold text-slate-300 mt-2 font-cinzel">ROOK</span>
+            </div>
+        </div>
+
+        <div id="cinematicStoryText" class="mt-4 text-sm sm:text-base font-bold text-amber-300 min-h-[48px] flex items-center justify-center">
+            공격 측의 강력한 검격이 적 체스말을 향해 내리꽂힙니다!
+        </div>
+
+        <button id="closeCinematicBtn" onclick="closeCombatCinematic()" class="mt-4 px-6 py-2.5 bg-hogwarts-gold text-slate-950 font-black rounded-xl text-xs hover:bg-yellow-400 transition shadow-lg opacity-0 pointer-events-none font-cinzel">
+            승리 확인 및 체스판 깃발 꽂기
+        </button>
+    </div>
+</div>
+
+<!-- 일반 칸 상세 / 점령 모달 -->
+<div id="cellModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-hogwarts-surface border-2 border-hogwarts-gold/60 rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-slate-200">
+        <button onclick="closeCellModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+
+        <div class="flex items-center gap-3 mb-4">
+            <span id="modalCoordBadge" class="text-xl font-black font-cinzel px-3 py-1 rounded-lg bg-hogwarts-card border border-hogwarts-gold text-hogwarts-gold">A1</span>
+            <div>
+                <h3 id="modalCellTitle" class="text-base font-bold text-white">빈 칸 (미점령지)</h3>
+                <p id="modalCellSubtitle" class="text-xs text-slate-400">좌표 상세 정보</p>
+            </div>
+        </div>
+
+        <div id="modalStatusBox" class="bg-hogwarts-card border border-hogwarts-border rounded-xl p-3.5 mb-4 text-xs space-y-1.5"></div>
+        <div id="modalActionArea" class="space-y-3"></div>
+    </div>
+</div>
+
+<!-- 카톡 투표 맞짱 배틀 6선 모달 -->
+<div id="voteMatchesModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-hogwarts-surface border border-hogwarts-gold rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative text-slate-200 text-xs sm:text-sm max-h-[85vh] overflow-y-auto custom-scroll">
+        <button onclick="closeVoteMatchesModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+
+        <h3 class="text-lg font-bold text-hogwarts-gold font-cinzel mb-2 flex items-center gap-2">
+            <span>🗳️ 카톡 투표 맞짱 배틀 6선 (도파민 매치)</span>
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">
+            두 기숙사가 출전 후보를 제출하고, 나머지 기숙사 멤버들이 카톡 익명 투표로 승패를 가리는 배틀 모드입니다!
+        </p>
+
+        <div class="space-y-3" id="voteMatchesList"></div>
+
+        <div class="mt-5 text-center">
+            <button onclick="closeVoteMatchesModal()" class="px-5 py-2 bg-hogwarts-gold text-slate-950 font-bold rounded-lg text-xs hover:bg-yellow-400 transition">
+                닫기
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 규칙 설명 모달 -->
+<div id="rulesModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-hogwarts-surface border border-hogwarts-gold rounded-2xl max-w-lg w-full p-6 shadow-2xl relative text-slate-200 text-xs sm:text-sm max-h-[85vh] overflow-y-auto custom-scroll">
+        <button onclick="closeRulesModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">✕</button>
+
+        <h3 class="text-lg font-bold text-hogwarts-gold font-cinzel mb-4 flex items-center gap-2">
+            <span>📜 4대 기숙사 체스 영토점령전 룰북</span>
+        </h3>
+
+        <div class="space-y-4 text-slate-300 leading-relaxed">
+            <div class="bg-hogwarts-card p-3 rounded-lg border border-hogwarts-border">
+                <h4 class="font-bold text-hogwarts-goldLight text-xs mb-1">1. 스타팅 본진 & 이동 규칙</h4>
+                <p class="text-xs">
+                    - 4대 기숙사는 4곳의 구석(2x2 진영)을 본진으로 출발합니다.<br>
+                    • 🦁 그리핀도르: A1~B2 | 🦡 후플푸프: G1~H2<br>
+                    • 🦅 래번클로: A7~B8 | 🐍 슬리데린: G7~H8<br>
+                    - 내 기숙사가 이미 점령한 땅과 <strong>상·하·좌·우·대각선(8방향)</strong>으로 맞닿은 칸으로만 전진할 수 있습니다.
+                </p>
+            </div>
+
+            <div class="bg-hogwarts-card p-3 rounded-lg border border-hogwarts-border">
+                <h4 class="font-bold text-hogwarts-goldLight text-xs mb-1">2. 개척 미션 16종 (도파민 책 사냥)</h4>
+                <p class="text-xs">
+                    맞닿은 빈칸을 클릭 후 <strong>'🎲 미션 뽑기'</strong>를 진행합니다. 도파민 단어 사냥, 찰진 악플러 코멘트, 5초 음성 낭독 등 유쾌하고 부담 없는 인증을 단톡방에 올린 후 점령 완료를 누릅니다.
+                </p>
+            </div>
+
+            <div class="bg-hogwarts-card p-3 rounded-lg border border-hogwarts-border">
+                <h4 class="font-bold text-hogwarts-goldLight text-xs mb-1">3. 12시간 공방전 & 카톡 투표 맞짱</h4>
+                <p class="text-xs">
+                    - <strong>공격 선언:</strong> 상대 기숙사 칸을 누르면 12시간 카운트다운과 함께 공격/방어 미션이 시작됩니다.<br>
+                    - <strong>카톡 투표 매치:</strong> 배틀 카드에 포함된 카톡 투표 매치 양식을 복사하여 단톡방에 올리고 다른 기숙사 멤버들의 투표로 승패를 결착할 수도 있습니다!<br>
+                    - <strong>방어 성공:</strong> 12시간 내 방어 인증 완료 시 공격자 후퇴.<br>
+                    - <strong>방어 실패/격파:</strong> 12시간 초과 시 《마법사의 돌》 실감 체스 격파 애니메이션과 함께 영토를 탈환합니다.
+                </p>
+            </div>
+
+            <div class="bg-hogwarts-card p-3 rounded-lg border border-hogwarts-border">
+                <h4 class="font-bold text-hogwarts-goldLight text-xs mb-1">4. 중앙 4칸 결전지 (D4, E4, D5, E5)</h4>
+                <p class="text-xs">
+                    체스판 정중앙 4칸은 마법사의 돌 핵심 결전지입니다! 먼저 차지하는 기숙사가 주도권을 잡습니다.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-5 text-center">
+            <button onclick="closeRulesModal()" class="px-5 py-2 bg-hogwarts-gold text-slate-950 font-bold rounded-lg text-xs hover:bg-yellow-400 transition">
+                확인 완료
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ========================================================
+       1. 기숙사 정의 & 최신 도파민 미션 풀
+       ======================================================== */
+    const HOUSES = {
+        gryffindor: {
+            id: 'gryffindor',
+            name: '그리핀도르',
+            icon: '🦁',
+            color: '#7a1419',
+            lightColor: '#ef4444',
+            baseBg: 'bg-hogwarts-gryf',
+            baseText: 'text-rose-400',
+            borderColor: '#b91c1c',
+            weapon: '🗡️ 고드릭의 은검',
+            pieceIcon: '♟️',
+            baseCoords: ['A1', 'A2', 'B1', 'B2']
+        },
+        slytherin: {
+            id: 'slytherin',
+            name: '슬리데린',
+            icon: '🐍',
+            color: '#123d30',
+            lightColor: '#10b981',
+            baseBg: 'bg-hogwarts-slyth',
+            baseText: 'text-emerald-400',
+            borderColor: '#047857',
+            weapon: '🗡️ 살라자르의 단검',
+            pieceIcon: '♞',
+            baseCoords: ['G7', 'G8', 'H7', 'H8']
+        },
+        ravenclaw: {
+            id: 'ravenclaw',
+            name: '래번클로',
+            icon: '🦅',
+            color: '#142f57',
+            lightColor: '#3b82f6',
+            baseBg: 'bg-hogwarts-raven',
+            baseText: 'text-blue-400',
+            borderColor: '#1d4ed8',
+            weapon: '🔱 독수리의 미늘창',
+            pieceIcon: '♝',
+            baseCoords: ['A7', 'A8', 'B7', 'B8']
+        },
+        hufflepuff: {
+            id: 'hufflepuff',
+            name: '후플푸프',
+            icon: '🦡',
+            color: '#8a6400',
+            lightColor: '#eab308',
+            baseBg: 'bg-hogwarts-huff',
+            baseText: 'text-yellow-400',
+            borderColor: '#ca8a04',
+            weapon: '🔨 헬가의 헤비메이스',
+            pieceIcon: '♜',
+            baseCoords: ['G1', 'G2', 'H1', 'H2']
+        }
+    };
+
+    const CENTER_CELLS = ['D4', 'D5', 'E4', 'E5'];
+
+    const EXPLORE_MISSIONS = [
+        { title: "도파민 단어 사냥", text: "지금 읽는 책에서 '사랑/배신/비밀/욕망' 중 아무 단어나 먼저 찾는 페이지 찰칵 찍어 올리기!" },
+        { title: "첫인상 악플러", text: "지금 읽는 책 주인공에게 단톡방에서 딱 한 줄로 찰진 잔소리(디스) 날리기 (예: '해리야 제발 하지 말라면 하지 마라')" },
+        { title: "호그와트 ASMR", text: "책 속에서 가장 찰진 의성어·의태어(예: 쿵, 사르르, 덜컹)가 적힌 문장 사진 올리기" },
+        { title: "스포일러 금지령", text: "다음 챕터에서 일어날 일을 완전 엉뚱하고 막장 드라마처럼 1줄 예언하기" },
+        { title: "운명의 페이지", text: "내 생일 날짜(예: 7월 23일 ➔ 72쪽 or 23쪽) 펼쳐서 첫 문장 사진 올리고 오늘 내 운세라고 우기기" },
+        { title: "도서관 도둑 발각", text: "오늘 프리덤(온라인 자율 자습) 1타임 완주하고 '완벽한 알리바이'라고 단톡방에 외치기" },
+        { title: "책 속 비주얼 쇼크", text: "책 표지나 본문 삽화에서 가장 웃기거나 기묘한 부분 손가락으로 콕 짚어 찍기" },
+        { title: "명대사 낭독회", text: "책 속 대사 하나를 영화 예고편 성우 톤으로 읽는 5초짜리 카톡 음성메시지 쏘기!" },
+        { title: "작가의 멘탈 점검", text: "읽다가 '이 작가 진짜 천재거나 미쳤다' 싶었던 문장 1줄 발췌하기" },
+        { title: "책갈피 자랑대회", text: "영수증, 비행기표, 젤리 껍질 등 가장 어이없는 '내 책갈피' 실물 사진 투척하기" },
+        { title: "타 기숙사 낚시", text: "타 기숙사 팀원 1명 멘션해서 '이 책 완전 네 취향일 듯' 하고 낚시성 추천 멘트 던지기" },
+        { title: "글자 수 숨바꼭질", text: "딱 3글자로만 된 문장이나 대사(예: '안 돼!', '그렇다.') 찾아 찍기" },
+        { title: "독서 메이트 강제 소집", text: "단톡방에 '지금 침대에 누워있는 사람 누구냐!' 외치고 같은 기숙사 잠수러 1명 태그하기" },
+        { title: "내 책의 킬포", text: "지금 읽는 책에서 가장 오글거리거나 닭살 돋는 로맨스/감성 문장 박제하기" },
+        { title: "마법의 부적", text: "책상 위 당 충전용 간식(초콜릿, 과자, 젤리) 사진 올리며 '도파민 충전 완료' 선언" },
+        { title: "페이지 카운트다운", text: "책 뒤표지까지 딱 몇 페이지 남았는지 적고 '오늘 안에 끝낸다' 허세 부리기" }
+    ];
+
+    const ATTACK_MISSIONS = [
+        { title: "아바다 케다브라급 팩폭", text: "책 속에서 누군가의 뼈를 사정없이 때리는 독설/팩폭 문장 사진 찍어 상대 기숙사에 날리기" },
+        { title: "악역 빙의 낭독", text: "책 속 악당이나 얄미운 인물의 대사를 5초 카톡 음성메시지로 소름 돋게 연기해서 올리기" },
+        { title: "공격형 밸런스 질문", text: "책 속 상황으로 상대 기숙사 멘붕 올 만한 '골 때리는 밸런스 게임' 1개 출제하기" },
+        { title: "파국의 한 줄", text: "'모든 것이 끝났다', '절망이었다' 등 파멸의 기운이 뚝뚝 흐르는 책 속 문장 발췌하기" },
+        { title: "죽음을 먹는 자의 도발", text: "책을 덮은 뒤 책 모서리로 책상을 '탕!' 치는 짤막한 영상이나 도발 텍스트 올리기" },
+        { title: "마법 지팡이 겨누기", text: "읽고 있는 책을 지팡이 삼아 카메라 렌즈를 향해 겨눈 위협적인 사진 찰칵 인증!" }
+    ];
+
+    const DEFENSE_MISSIONS = [
+        { title: "반사 마법 (프로텍고!)", text: "책 속에서 가장 다정하거나 평화로운 문장을 투척해 상대의 공격을 무력화하기" },
+        { title: "기숙사 단체 쉴드", text: "공격당한 칸 글에 우리 기숙사 팀원 3명이 릴레이로 '어림없다!' 댓글 달아 방어막 완성하기" },
+        { title: "물리적 철벽 요새", text: "집에 굴러다니는 두꺼운 책(벽돌책) 3권 쌓아 올려 '뚫을 수 없는 요새' 사진 찍기" },
+        { title: "쿨한 한마디", text: "책 속에서 '상관없어', '어쩌라고' 뉘앙스의 초연한 대사 문장 1초 컷으로 찾아 올리기" },
+        { title: "수호신(패트로누스) 영물", text: "집의 반려동물(강아지/고양이/인형)이나 우리 기숙사 상징물 사진 올리며 '수호 완료!' 외치기" },
+        { title: "영혼 체인지 쉴드", text: "공격한 상대 기숙사 말끝 말투(예: 슬리데린체, 그리핀도르체)를 그대로 흉내 내며 킹받게 방어 완료 답장 달기" }
+    ];
+
+    const VOTE_MATCHES = [
+        {
+            id: "vote_1",
+            title: "고전문학 속 '최악의 개노답 빌런' 대결",
+            rule: "각자 읽은 고전/소설 속에서 '인성·행동이 상종 못 할 수준'인 인물과 만행 요약 2줄을 제시합니다.",
+            voteStandard: "누가 더 뒷목 잡게 만드는 개노답인가?",
+            example: "《폭풍의 언덕》 히스클리프 vs 《오이디푸스 왕》 크레온 (or 《위대한 개츠비》 톰 뷰캐넌)"
+        },
+        {
+            id: "vote_2",
+            title: "'내 최애캐와 무인도 갇히기 vs 절교하기' 극한 밸런스 대결",
+            rule: "각 기숙사에서 책 속 인물을 데려와 '둘 중 평생 한 방 쓰기 더 끔찍한 인물' 선택지를 만듭니다.",
+            voteStandard: "한 공간에 10분만 같이 있어도 기 빨려 탈출하고 싶은 인물은?",
+            example: "24시간 쉬지 않고 잔소리·팩폭하는 인물 vs 1분마다 사고 치고 수습 안 하는 인물"
+        },
+        {
+            id: "vote_3",
+            title: "등장인물 '분노 유발 죄목' 모의재판 대결",
+            rule: "책 속 인물이 저지른 기상천외한 짓(바람, 사기, 뒤통수, 회피 등)에 죄명을 붙여 고발합니다.",
+            voteStandard: "마법부 아즈카반 종신형에 더 어울리는 파렴치범은 누구인가?",
+            example: "'사랑에 빠진 게 죄는 아니잖아' 뻔뻔형 불륜남 vs '친구 통수치고 가문 말아먹은' 배신자"
+        },
+        {
+            id: "vote_4",
+            title: "'더 킹받는 문장' 낭독 배틀",
+            rule: "읽고 있는 책에서 상대방 혈압을 가장 효과적으로 올릴 수 있는 '오만방자하거나 얄미운 대사 1줄'을 가져옵니다.",
+            voteStandard: "육성으로 들었을 때 더 뺨 한 대 때려주고 싶은 대사는?",
+            example: "귀족의 뼈 때리는 선민의식 대사 vs 적반하장 피해자 코스프레 대사"
+        },
+        {
+            id: "vote_5",
+            title: "'절대 취향 안 맞는 낚시 책' 추천 대결",
+            rule: "상대 기숙사의 취향을 완벽히 빗겨나갈 괴작·난해작을 1권씩 들고나와 '너한테 인생작이 될 이유'를 뻔뻔하게 영업합니다.",
+            voteStandard: "읽다가 책을 집어던질 확률이 더 높아 보이는 고통의 책은?",
+            example: "1페이지 읽고 수면제 직행하는 철학 벽돌책 vs 전개 예측 불가능한 막장 서사"
+        },
+        {
+            id: "vote_6",
+            title: "작가의 '제일 지독한 과몰입 설정' 고발 대결",
+            rule: "책을 읽다 '작가가 진짜 변태(천재) 같다'고 느낀 소름 돋거나 쓸데없이 집요한 묘사/설정을 소개합니다.",
+            voteStandard: "어느 쪽 작가의 광기(집착)가 더 깊어 보이는가?",
+            example: "3페이지에 걸친 사물 묘사 vs 등장인물 계보 5대조까지 파고든 세계관"
+        }
+    ];
+
+    /* ========================================================
+       2. Web Audio API 사운드 엔진
+       ======================================================== */
+    let audioCtx = null;
+    let isSoundMuted = false;
+
+    function getAudioContext() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function toggleAudio() {
+        isSoundMuted = !isSoundMuted;
+        const icon = document.getElementById('audioIcon');
+        const text = document.getElementById('audioStatusText');
+        if (isSoundMuted) {
+            icon.innerText = '🔇';
+            text.innerText = '사운드 OFF';
+        } else {
+            icon.innerText = '🔊';
+            text.innerText = '사운드 ON';
+            getAudioContext();
+        }
+    }
+
+    function playSlashSound() {
+        if (isSoundMuted) return;
+        try {
+            const ctx = getAudioContext();
+            const bufferSize = ctx.sampleRate * 0.25;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1200, ctx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.22);
+            filter.Q.setValueAtTime(3, ctx.currentTime);
+
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.35, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            noise.start();
+        } catch (e) {}
+    }
+
+    function playStoneCrashSound() {
+        if (isSoundMuted) return;
+        try {
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(140, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(35, ctx.currentTime + 0.35);
+
+            gain.gain.setValueAtTime(0.9, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.45);
+
+            const bufferSize = ctx.sampleRate * 0.4;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.08));
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseFilter = ctx.createBiquadFilter();
+            noiseFilter.type = 'highpass';
+            noiseFilter.frequency.setValueAtTime(800, ctx.currentTime);
+
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.7, ctx.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+            noise.start();
+        } catch (e) {}
+    }
+
+    function playVictoryChime() {
+        if (isSoundMuted) return;
+        try {
+            const ctx = getAudioContext();
+            const notes = [440, 554.37, 659.25, 880];
+            notes.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+
+                gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + idx * 0.12 + 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.5);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + idx * 0.12);
+                osc.stop(ctx.currentTime + idx * 0.12 + 0.5);
+            });
+        } catch (e) {}
+    }
+
+    /* ========================================================
+       3. 캔버스 파티클 시스템
+       ======================================================== */
+    let particles = [];
+    let particleAnimId = null;
+
+    class StoneParticle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.vx = (Math.random() - 0.5) * 14;
+            this.vy = (Math.random() - 0.7) * 16;
+            this.gravity = 0.55;
+            this.size = Math.random() * 8 + 3;
+            this.rotation = Math.random() * Math.PI * 2;
+            this.rotSpeed = (Math.random() - 0.5) * 0.3;
+            this.color = color || '#a8a29e';
+            this.alpha = 1;
+            this.decay = Math.random() * 0.02 + 0.015;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vy += this.gravity;
+            this.rotation += this.rotSpeed;
+            this.alpha -= this.decay;
+        }
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = Math.max(0, this.alpha);
+            ctx.beginPath();
+            ctx.moveTo(-this.size, -this.size / 2);
+            ctx.lineTo(this.size / 2, -this.size);
+            ctx.lineTo(this.size, this.size / 2);
+            ctx.lineTo(-this.size / 2, this.size);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function initParticleCanvas() {
+        const canvas = document.getElementById('particleCanvas');
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+
+    function spawnStoneExplosion(x, y, count = 45) {
+        const colors = ['#78716c', '#a8a29e', '#d6d3d1', '#f59e0b', '#ef4444'];
+        for (let i = 0; i < count; i++) {
+            const c = colors[Math.floor(Math.random() * colors.length)];
+            particles.push(new StoneParticle(x, y, c));
+        }
+        if (!particleAnimId) {
+            loopParticles();
+        }
+    }
+
+    function loopParticles() {
+        const canvas = document.getElementById('particleCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.update();
+            p.draw(ctx);
+            if (p.alpha <= 0) {
+                particles.splice(i, 1);
+            }
+        }
+
+        if (particles.length > 0) {
+            particleAnimId = requestAnimationFrame(loopParticles);
+        } else {
+            cancelAnimationFrame(particleAnimId);
+            particleAnimId = null;
+        }
+    }
+
+    /* ========================================================
+       4. 애플리케이션 상태 관리
+       ======================================================== */
+    let state = {
+        currentHouse: 'gryffindor',
+        cells: {},
+        battles: {},
+        logs: []
+    };
+
+    const COLS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const ROWS = [8, 7, 6, 5, 4, 3, 2, 1];
+
+    function parseCoord(coord) {
+        return { col: coord.charAt(0), row: parseInt(coord.slice(1), 10) };
+    }
+
+    function getAdjacentCoords(coord) {
+        const { col, row } = parseCoord(coord);
+        const colIdx = COLS.indexOf(col);
+        const adj = [];
+        const d = [-1, 0, 1];
+
+        for (let dc of d) {
+            for (let dr of d) {
+                if (dc === 0 && dr === 0) continue;
+                const nColIdx = colIdx + dc;
+                const nRow = row + dr;
+                if (nColIdx >= 0 && nColIdx < 8 && nRow >= 1 && nRow <= 8) {
+                    adj.push(COLS[nColIdx] + nRow);
+                }
+            }
+        }
+        return adj;
+    }
+
+    function canHouseReachCoord(houseId, coord) {
+        if (HOUSES[houseId].baseCoords.includes(coord)) return true;
+        const adjList = getAdjacentCoords(coord);
+        return adjList.some(c => state.cells[c] && state.cells[c].house === houseId);
+    }
+
+    function initDefaultBoard() {
+        const cells = {};
+        for (let c of COLS) {
+            for (let r = 1; r <= 8; r++) {
+                const coord = c + r;
+                cells[coord] = {
+                    coord: coord,
+                    house: null,
+                    mission: null,
+                    isBase: false,
+                    isCenter: CENTER_CELLS.includes(coord)
+                };
+            }
+        }
+
+        Object.values(HOUSES).forEach(house => {
+            house.baseCoords.forEach(coord => {
+                cells[coord].house = house.id;
+                cells[coord].isBase = true;
+                cells[coord].mission = { title: "기숙사 본진 성채", text: "영광스러운 기숙사의 시작점입니다." };
+            });
+        });
+
+        state.cells = cells;
+        state.battles = {};
+        state.logs = [
+            { time: formatTime(new Date()), text: "🏰 1월 마법사의 돌 체스판 영토점령전 & 도파민 배틀 개막!" }
+        ];
+        saveState();
+    }
+
+    function loadState() {
+        try {
+            const saved = localStorage.getItem("hogwarts_chess_battle_dopamine_v1");
+            if (saved) {
+                state = JSON.parse(saved);
+                if (!state.cells || Object.keys(state.cells).length < 64) {
+                    initDefaultBoard();
+                }
+            } else {
+                initDefaultBoard();
+            }
+        } catch (e) {
+            initDefaultBoard();
+        }
+    }
+
+    function saveState() {
+        try {
+            localStorage.setItem("hogwarts_chess_battle_dopamine_v1", JSON.stringify(state));
+        } catch (e) {}
+    }
+
+    function addLog(text) {
+        state.logs.unshift({
+            time: formatTime(new Date()),
+            text: text
+        });
+        if (state.logs.length > 25) state.logs.pop();
+        saveState();
+        renderLogs();
+    }
+
+    function formatTime(date) {
+        const d = new Date(date);
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${m}/${day} ${h}:${min}`;
+    }
+
+    function setCurrentHouse(houseId) {
+        state.currentHouse = houseId;
+        document.getElementById('currentHouseSelector').value = houseId;
+        saveState();
+        renderAll();
+    }
+
+    /* ========================================================
+       5. 12시간 자동 판정 & 격파 트리거
+       ======================================================== */
+    function checkBattlesExpiry() {
+        const now = Date.now();
+        let capturedBattle = null;
+
+        Object.keys(state.battles).forEach(coord => {
+            const battle = state.battles[coord];
+            if (battle && battle.status === 'active') {
+                if (now >= battle.endTime) {
+                    battle.status = 'captured';
+                    state.cells[coord].house = battle.attackerHouse;
+                    capturedBattle = battle;
+                    delete state.battles[coord];
+                }
+            }
+        });
+
+        if (capturedBattle) {
+            const atk = HOUSES[capturedBattle.attackerHouse];
+            const def = HOUSES[capturedBattle.defenderHouse];
+            addLog(`💥 [12시간 경과 격파!] ${def.name}의 ${capturedBattle.coord} 체스말이 산산조각나며 ${atk.name}에게 함락되었습니다!`);
+            saveState();
+            renderAll();
+            playCombatCinematic(capturedBattle.attackerHouse, capturedBattle.defenderHouse, capturedBattle.coord);
+        }
+    }
+
+    /* ========================================================
+       6. UI 렌더링
+       ======================================================== */
+    function renderStatsBar() {
+        const container = document.getElementById('houseStatsBar');
+        const counts = { gryffindor: 0, slytherin: 0, ravenclaw: 0, hufflepuff: 0, neutral: 0 };
+
+        Object.values(state.cells).forEach(cell => {
+            if (cell.house) counts[cell.house]++;
+            else counts.neutral++;
+        });
+
+        const sortedHouses = Object.values(HOUSES).sort((a, b) => counts[b.id] - counts[a.id]);
+
+        container.innerHTML = sortedHouses.map((h, idx) => {
+            const count = counts[h.id];
+            const pct = Math.round((count / 64) * 100);
+            const isSelected = state.currentHouse === h.id;
+
+            return `
+          <div class="bg-hogwarts-surface border ${isSelected ? 'border-hogwarts-gold shadow-lg shadow-amber-950/40' : 'border-hogwarts-border'} rounded-xl p-3 flex flex-col justify-between transition relative overflow-hidden">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold ${h.baseText} flex items-center gap-1.5">
+                <span>${h.icon}</span> ${h.name}
+              </span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-black/40 text-slate-400 font-cinzel">#${idx + 1}위</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span class="text-xl font-black text-white font-cinzel">${count} <span class="text-xs font-normal text-slate-400">/ 64칸</span></span>
+              <span class="text-xs font-bold text-hogwarts-gold">${pct}%</span>
+            </div>
+            <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-2">
+              <div class="h-full rounded-full transition-all duration-300" style="width: ${pct}%; background-color: ${h.lightColor};"></div>
+            </div>
+          </div>
+        `;
+        }).join('');
+    }
+
+    function renderBoard() {
+        const board = document.getElementById('chessBoard');
+        board.innerHTML = '';
+
+        for (let r of ROWS) {
+            for (let c of COLS) {
+                const coord = c + r;
+                const cell = state.cells[coord];
+                const battle = state.battles[coord];
+
+                const colIdx = COLS.indexOf(c);
+                const isDarkSquare = (colIdx + r) % 2 === 0;
+
+                let bgClass = isDarkSquare ? 'bg-[#281b13]' : 'bg-[#443123]';
+                let borderStyle = 'border border-black/40';
+                let content = '';
+
+                if (cell.house) {
+                    const h = HOUSES[cell.house];
+                    bgClass = h.baseBg;
+                    content = `<span class="text-base sm:text-lg select-none filter drop-shadow">${h.pieceIcon || h.icon}</span>`;
+                } else if (cell.isCenter) {
+                    content = `<span class="text-[10px] sm:text-xs select-none opacity-80">👑</span>`;
+                }
+
+                if (battle && battle.status === 'active') {
+                    borderStyle = 'border-2 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.85)] z-10';
+                    content = `<span class="text-xs sm:text-sm animate-bounce select-none">⚔️</span>`;
+                }
+
+                const isReachable = canHouseReachCoord(state.currentHouse, coord);
+                const reachDot = (isReachable && !cell.house) ? '<span class="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-hogwarts-goldLight opacity-80"></span>' : '';
+
+                const cellEl = document.createElement('div');
+                cellEl.className = `chess-cell relative flex flex-col items-center justify-center rounded cursor-pointer select-none aspect-square ${bgClass} ${borderStyle}`;
+                cellEl.innerHTML = `
+            ${content}
+            <span class="absolute top-0.5 left-1 text-[8px] sm:text-[9px] font-cinzel opacity-40 font-bold text-white pointer-events-none">${coord}</span>
+            ${reachDot}
+          `;
+
+                cellEl.onclick = () => openCellModal(coord);
+                board.appendChild(cellEl);
+            }
+        }
+    }
+
+    function renderBattles() {
+        const container = document.getElementById('activeBattlesList');
+        const badge = document.getElementById('activeBattleCountBadge');
+        const activeBattleKeys = Object.keys(state.battles).filter(k => state.battles[k].status === 'active');
+
+        badge.innerText = `${activeBattleKeys.length}건`;
+
+        if (activeBattleKeys.length === 0) {
+            container.innerHTML = `
+          <div class="text-center py-8 text-xs text-slate-500 border border-dashed border-hogwarts-border rounded-xl">
+            현재 진행 중인 공방전이 없습니다.<br>
+            적 영토를 클릭해 12시간 공격을 선언해보세요!
+          </div>
+        `;
+            return;
+        }
+
+        const now = Date.now();
+        container.innerHTML = activeBattleKeys.map(coord => {
+            const b = state.battles[coord];
+            const atk = HOUSES[b.attackerHouse];
+            const def = HOUSES[b.defenderHouse];
+            const remainingMs = Math.max(0, b.endTime - now);
+
+            const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            const isUrgent = hours < 2;
+            const isDefender = state.currentHouse === b.defenderHouse;
+            const voteMatch = b.voteMatch || VOTE_MATCHES[0];
+
+            return `
+          <div class="bg-hogwarts-card border border-amber-600/40 rounded-xl p-3 shadow-md space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-cinzel font-black text-hogwarts-gold text-xs px-2 py-0.5 rounded bg-black/40 border border-hogwarts-gold/30">
+                ${coord} 격전
+              </span>
+              <span class="text-xs font-bold ${isUrgent ? 'text-rose-400 animate-pulse' : 'text-amber-300'}">
+                ⏳ 남은시간: ${hours}시간 ${minutes}분
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs py-1 px-2 rounded bg-black/30">
+              <span class="${atk.baseText} font-bold">${atk.icon} ${atk.name} (공격)</span>
+              <span class="text-slate-400 text-[10px]">VS</span>
+              <span class="${def.baseText} font-bold">${def.icon} ${def.name} (수호)</span>
+            </div>
+
+            <div class="text-[11px] text-slate-300 space-y-1.5 bg-slate-900/50 p-2.5 rounded-lg border border-slate-800">
+              <div><strong class="text-amber-400">⚔️ 공격 미션:</strong> ${b.attackMission.title} - <span class="text-slate-300">${b.attackMission.text}</span></div>
+              <div><strong class="text-sky-400">🛡️ 방어 미션:</strong> ${b.defenseMission.title} - <span class="text-slate-300">${b.defenseMission.text}</span></div>
+              <div class="pt-1.5 border-t border-slate-800">
+                <span class="text-purple-300 font-bold">🗳️ 연계 카톡 투표 맞짱:</span>
+                <p class="text-slate-300 text-[10px] mt-0.5"><strong>[${voteMatch.title}]</strong><br>${voteMatch.rule}</p>
+              </div>
+            </div>
+
+            <button onclick="copyKakaoVoteFormat('${coord}')" class="w-full py-1.5 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-200 text-[11px] rounded-lg font-bold transition flex items-center justify-center gap-1">
+              <span>📋</span> <span>카톡 투표 생성용 양식 복사</span>
+            </button>
+
+            <div class="flex items-center justify-between pt-1 gap-2">
+              <button onclick="forceCaptureBattle('${coord}')" class="px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-rose-900/80 hover:bg-rose-800 text-rose-200 border border-rose-700/60 transition flex-1">
+                💥 격파 승리 연출
+              </button>
+
+              <button onclick="resolveDefense('${coord}')" class="px-2.5 py-1.5 text-[11px] font-bold rounded-lg ${isDefender ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-200'} transition flex-1">
+                🛡️ ${def.name} 방어 성공
+              </button>
+            </div>
+          </div>
+        `;
+        }).join('');
+    }
+
+    function renderLogs() {
+        const container = document.getElementById('battleLogContainer');
+        if (state.logs.length === 0) {
+            container.innerHTML = '<div class="text-slate-500 text-center py-4">기록이 없습니다.</div>';
+            return;
+        }
+        container.innerHTML = state.logs.map(log => `
+        <div class="p-2 rounded bg-hogwarts-card border border-hogwarts-border/50 text-[11px] flex items-start gap-2">
+          <span class="text-[10px] text-hogwarts-gold font-mono whitespace-nowrap pt-0.5">${log.time}</span>
+          <span class="text-slate-300 leading-tight">${log.text}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderAll() {
+        renderStatsBar();
+        renderBoard();
+        renderBattles();
+        renderLogs();
+    }
+
+    /* ========================================================
+       7. 마법사의 돌 체스 격파 시네마틱 애니메이션 엔진
+       ======================================================== */
+    let currentCinematicCallback = null;
+
+    function playCombatCinematic(attackerHouseId, defenderHouseId, coord, onFinishCallback) {
+        currentCinematicCallback = onFinishCallback;
+        const overlay = document.getElementById('combatCinematicOverlay');
+        const body = document.getElementById('mainBody');
+        const atk = HOUSES[attackerHouseId];
+        const def = HOUSES[defenderHouseId];
+
+        initParticleCanvas();
+
+        document.getElementById('cinematicTitle').innerText = `${coord} 체스 결전 : ${atk.name} vs ${def.name}`;
+        document.getElementById('cinematicAttackerBadge').innerText = `${atk.icon} ${atk.name}`;
+        document.getElementById('cinematicDefenderBadge').innerText = `${def.icon} ${def.name}`;
+
+        document.getElementById('cinematicAttackerPiece').innerText = atk.pieceIcon || '♟️';
+        document.getElementById('cinematicDefenderPiece').innerText = def.pieceIcon || '♜';
+
+        document.getElementById('cinematicAttackerName').innerText = atk.weapon;
+        document.getElementById('cinematicDefenderName').innerText = `${def.name} 수호 석상`;
+
+        const weaponEl = document.getElementById('cinematicWeapon');
+        const clashSign = document.getElementById('cinematicClashSign');
+        const defenderPiece = document.getElementById('cinematicDefenderPiece');
+        const stoneDebris = document.getElementById('cinematicStoneDebris');
+        const storyText = document.getElementById('cinematicStoryText');
+        const closeBtn = document.getElementById('closeCinematicBtn');
+        const attackerWrap = document.getElementById('cinematicAttackerWrap');
+
+        closeBtn.classList.add('opacity-0', 'pointer-events-none');
+        defenderPiece.className = "text-6xl sm:text-7xl filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)] select-none";
+        weaponEl.className = "absolute -top-10 -right-6 text-4xl sm:text-5xl opacity-0 z-20 pointer-events-none select-none";
+        clashSign.className = "text-3xl opacity-0 font-black text-amber-300 tracking-tighter filter drop-shadow-[0_0_15px_#f59e0b]";
+        stoneDebris.className = "absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 text-xl";
+        attackerWrap.style.transform = 'translateX(0)';
+
+        overlay.classList.remove('hidden');
+
+        storyText.innerText = `🗡️ ${atk.name}의 기물이 ${atk.weapon}(으)로 공격 태세를 갖춥니다!`;
+        setTimeout(() => {
+            attackerWrap.style.transform = 'translateX(40px) scale(1.1)';
+            weaponEl.className = "absolute -top-10 -right-6 text-4xl sm:text-5xl opacity-100 z-20 slash-anim";
+            playSlashSound();
+        }, 400);
+
+        setTimeout(() => {
+            clashSign.className = "text-5xl opacity-100 font-black text-amber-300 scale-125 transition-all filter drop-shadow-[0_0_25px_#f59e0b]";
+            body.classList.add('shake-active');
+            playStoneCrashSound();
+
+            const canvas = document.getElementById('particleCanvas');
+            spawnStoneExplosion(canvas.width * 0.7, canvas.height * 0.5, 60);
+
+            storyText.innerText = `💥 쾅-! 무자비한 일격이 ${def.name}의 석조 체스말을 직격했습니다!`;
+        }, 900);
+
+        setTimeout(() => {
+            body.classList.remove('shake-active');
+            defenderPiece.classList.add('piece-shatter');
+            stoneDebris.className = "absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 animate-ping text-3xl";
+
+            storyText.innerText = `🧱 적 체스말이 거대한 돌가루와 파편을 흩뿌리며 산산조각났습니다!`;
+        }, 1400);
+
+        setTimeout(() => {
+            playVictoryChime();
+            storyText.innerText = `🚩 체크메이트! ${atk.name}이 ${coord} 영토를 완벽하게 점령했습니다!`;
+            closeBtn.classList.remove('opacity-0', 'pointer-events-none');
+        }, 2200);
+    }
+
+    function closeCombatCinematic() {
+        document.getElementById('combatCinematicOverlay').classList.add('hidden');
+        if (currentCinematicCallback) {
+            currentCinematicCallback();
+            currentCinematicCallback = null;
+        }
+    }
+
+    function triggerTestAnimation() {
+        getAudioContext();
+        playCombatCinematic(state.currentHouse, 'slytherin' === state.currentHouse ? 'gryffindor' : 'slytherin', 'E4', () => {
+            addLog(`🎬 [테스트 연출] 체스말 격파 모션을 미리보기했습니다.`);
+        });
+    }
+
+    function forceCaptureBattle(coord) {
+        const battle = state.battles[coord];
+        if (!battle) return;
+
+        const atk = HOUSES[battle.attackerHouse];
+        const def = HOUSES[battle.defenderHouse];
+
+        playCombatCinematic(battle.attackerHouse, battle.defenderHouse, coord, () => {
+            state.cells[coord].house = battle.attackerHouse;
+            delete state.battles[coord];
+            addLog(`💥 [격파 승리!] ${atk.name}이 ${def.name}의 ${coord} 기물을 박살내고 영토를 빼앗았습니다!`);
+            saveState();
+            renderAll();
+        });
+    }
+
+    /* ========================================================
+       8. 칸 모달 & 미션 뽑기 / 공격 / 방어 로직 (완전 복구)
+       ======================================================== */
+    let activeModalCoord = null;
+    let drawnMission = null;
+
+    function openCellModal(coord) {
+        activeModalCoord = coord;
+        drawnMission = null;
+
+        const cell = state.cells[coord];
+        const battle = state.battles[coord];
+        const currentH = HOUSES[state.currentHouse];
+        const isReachable = canHouseReachCoord(state.currentHouse, coord);
+
+        document.getElementById('modalCoordBadge').innerText = coord;
+        const titleEl = document.getElementById('modalCellTitle');
+        const subEl = document.getElementById('modalCellSubtitle');
+        const statusBox = document.getElementById('modalStatusBox');
+        const actionArea = document.getElementById('modalActionArea');
+
+        if (cell.house) {
+            const owner = HOUSES[cell.house];
+            titleEl.innerText = `${owner.icon} ${owner.name}의 영토`;
+            subEl.innerText = cell.isBase ? '기숙사 절대 불침 본진 성채' : '점령 완료된 땅';
+        } else {
+            titleEl.innerText = cell.isCenter ? '👑 중앙 최전선 황금 격전지' : '미개척 빈 칸';
+            subEl.innerText = cell.isCenter ? '마법사의 돌 핵심 요충지 (+보너스 영토)' : '자유롭게 개척할 수 있는 땅';
+        }
+
+        let statusHtml = `
+        <div class="flex justify-between"><span class="text-slate-400">점령 기숙사:</span> <span class="font-bold text-white">${cell.house ? HOUSES[cell.house].name : '없음 (중립)'}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">내 기숙사 전선 연결:</span> <span class="font-bold ${isReachable ? 'text-emerald-400' : 'text-rose-400'}">${isReachable ? '도달 가능 (인접함)' : '도달 불가 (먼저 길을 여세요)'}</span></div>
+      `;
+
+        if (battle && battle.status === 'active') {
+            const atk = HOUSES[battle.attackerHouse];
+            const def = HOUSES[battle.defenderHouse];
+            statusHtml += `
+          <div class="mt-2 pt-2 border-t border-slate-700 text-amber-300 font-bold">
+            ⚔️ 12시간 공방전 진행 중!<br>
+            <span class="text-[11px] text-slate-300 font-normal">${atk.name}(공격) ↔ ${def.name}(수호)</span>
+          </div>
+        `;
+        }
+        statusBox.innerHTML = statusHtml;
+        actionArea.innerHTML = '';
+
+        if (battle && battle.status === 'active') {
+            actionArea.innerHTML = `
+          <div class="p-3 bg-amber-950/40 border border-amber-500/40 rounded-xl text-xs space-y-2">
+            <p class="text-amber-200">현재 12시간 공방전이 진행 중입니다. 방어 측은 12시간 내 방어 인증을 하거나 카톡 투표 매치로 승부를 겨룰 수 있습니다.</p>
+            <button onclick="copyKakaoVoteFormat('${coord}')" class="w-full py-2 bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 font-bold rounded-lg text-xs transition border border-indigo-500/40">
+              📋 카톡 투표 매치 양식 복사
+            </button>
+            <div class="flex gap-2">
+              <button onclick="forceCaptureBattle('${coord}')" class="flex-1 py-2.5 bg-rose-700 hover:bg-rose-600 text-white font-bold rounded-lg transition text-xs">
+                💥 체스말 격파 & 탈환
+              </button>
+              <button onclick="resolveDefense('${coord}')" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-lg transition text-xs">
+                🛡️ 방어 성공 완료
+              </button>
+            </div>
+          </div>
+        `;
+        } else if (cell.house === state.currentHouse) {
+            actionArea.innerHTML = `
+          <div class="p-3 bg-slate-800/60 rounded-xl text-center text-xs text-slate-300">
+            우리 기숙사(${currentH.name})가 이미 굳건히 수호하고 있는 땅입니다! 🛡️
+          </div>
+        `;
+        } else if (cell.house && cell.house !== state.currentHouse) {
+            const targetOwner = HOUSES[cell.house];
+            if (cell.isBase) {
+                actionArea.innerHTML = `
+            <div class="p-3 bg-rose-950/40 border border-rose-800 rounded-xl text-center text-xs text-rose-300">
+              ⚠️ 기숙사의 시작 성채(본진)는 공격할 수 없는 성역입니다.
+            </div>
+          `;
+            } else if (!isReachable) {
+                actionArea.innerHTML = `
+            <div class="p-3 bg-slate-800/60 rounded-xl text-center text-xs text-slate-400">
+              이 적 영토에 닿기 위한 전선이 연결되지 않았습니다. 인접한 칸부터 개척하세요.
+            </div>
+          `;
+            } else {
+                actionArea.innerHTML = `
+            <div class="space-y-2">
+              <div class="p-3 bg-rose-900/30 border border-rose-600/50 rounded-xl text-xs text-rose-200 leading-relaxed">
+                ⚔️ <strong>적 체스말 공격 선언 (12시간 턴제 공방전)</strong><br>
+                공격을 선언하면 12시간 타이머와 함께 도파민 공격/방어 미션 및 카톡 투표 매치가 배정됩니다!
+              </div>
+              <button onclick="declareAttack('${coord}')" class="w-full py-3 bg-gradient-to-r from-red-600 to-amber-600 hover:brightness-110 text-white font-bold rounded-xl transition text-xs flex items-center justify-center gap-1.5 shadow-lg">
+                <span>⚔️</span> ${targetOwner.name} 영토에 12시간 공격 선언
+              </button>
+            </div>
+          `;
+            }
+        } else if (!cell.house) {
+            if (!isReachable) {
+                actionArea.innerHTML = `
+            <div class="p-3 bg-slate-800/60 rounded-xl text-center text-xs text-slate-400">
+              우리 기숙사 땅과 맞닿아있지 않아 아직 개척할 수 없습니다. 연결된 인접 빈칸부터 나아가세요!
+            </div>
+          `;
+            } else {
+                actionArea.innerHTML = `
+            <div class="space-y-3">
+              <div id="drawnMissionBox" class="p-3 bg-hogwarts-card border border-hogwarts-gold/40 rounded-xl text-xs space-y-1">
+                <span class="text-hogwarts-gold font-bold">📜 개척 미션을 뽑아주세요</span>
+                <p class="text-slate-400 text-[11px]">도파민 단어 사냥, 찰진 멘트 등 16종의 독서 미션 중 1개가 랜덤 배정됩니다.</p>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="drawExploreMission()" class="flex-1 py-2.5 bg-hogwarts-card hover:bg-slate-700 border border-hogwarts-border text-hogwarts-gold font-bold rounded-xl text-xs transition">
+                  🎲 미션 뽑기
+                </button>
+                <button id="btnClaimCell" onclick="claimEmptyCell('${coord}')" disabled class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs transition">
+                  🚩 점령 완료
+                </button>
+              </div>
+            </div>
+          `;
+            }
+        }
+
+        document.getElementById('cellModal').classList.remove('hidden');
+    }
+
+    function closeCellModal() {
+        document.getElementById('cellModal').classList.add('hidden');
+        activeModalCoord = null;
+    }
+
+    function drawExploreMission() {
+        const mission = EXPLORE_MISSIONS[Math.floor(Math.random() * EXPLORE_MISSIONS.length)];
+        drawnMission = mission;
+
+        const box = document.getElementById('drawnMissionBox');
+        box.innerHTML = `
+        <div class="text-hogwarts-gold font-bold text-xs flex items-center gap-1">
+          <span>✨</span> [뽑힌 미션] ${mission.title}
+        </div>
+        <p class="text-slate-200 text-xs mt-1 leading-relaxed">${mission.text}</p>
+        <span class="text-[10px] text-emerald-400 mt-1 block">카톡 단톡방에 인증 후 아래 [점령 완료]를 누르세요!</span>
+      `;
+
+        document.getElementById('btnClaimCell').disabled = false;
+    }
+
+    function claimEmptyCell(coord) {
+        if (!drawnMission) return;
+        const currentH = HOUSES[state.currentHouse];
+        state.cells[coord].house = state.currentHouse;
+        state.cells[coord].mission = drawnMission;
+
+        addLog(`🚩 [영토 개척] ${currentH.icon}${currentH.name}이 ${coord} 칸을 점령했습니다! (${drawnMission.title})`);
+        closeCellModal();
+        saveState();
+        renderAll();
+        playVictoryChime();
+    }
+
+    function declareAttack(coord) {
+        const cell = state.cells[coord];
+        const targetHouseId = cell.house;
+        const atk = HOUSES[state.currentHouse];
+        const def = HOUSES[targetHouseId];
+
+        const atkMission = ATTACK_MISSIONS[Math.floor(Math.random() * ATTACK_MISSIONS.length)];
+        const defMission = DEFENSE_MISSIONS[Math.floor(Math.random() * DEFENSE_MISSIONS.length)];
+        const voteMatch = VOTE_MATCHES[Math.floor(Math.random() * VOTE_MATCHES.length)];
+
+        state.battles[coord] = {
+            coord: coord,
+            attackerHouse: state.currentHouse,
+            defenderHouse: targetHouseId,
+            startTime: Date.now(),
+            endTime: Date.now() + (12 * 60 * 60 * 1000), // 12시간
+            attackMission: atkMission,
+            defenseMission: defMission,
+            voteMatch: voteMatch,
+            status: 'active'
+        };
+
+        addLog(`⚔️ [공격 선언] ${atk.icon}${atk.name}이 ${def.icon}${def.name}의 ${coord} 기물을 공격했습니다! (12시간 타이머 시작)`);
+        closeCellModal();
+        saveState();
+        renderAll();
+        playSlashSound();
+    }
+
+    function resolveDefense(coord) {
+        const battle = state.battles[coord];
+        if (!battle) return;
+
+        const def = HOUSES[battle.defenderHouse];
+        const atk = HOUSES[battle.attackerHouse];
+
+        delete state.battles[coord];
+        addLog(`🛡️ [방어 성공] ${def.icon}${def.name}이 ${coord} 영토 방어 미션을 완수하여 ${atk.name}의 공격을 막아냈습니다!`);
+        closeCellModal();
+        saveState();
+        renderAll();
+        playVictoryChime();
+    }
+
+    function copyKakaoVoteFormat(coord) {
+        const b = state.battles[coord];
+        if (!b) return;
+
+        const atk = HOUSES[b.attackerHouse];
+        const def = HOUSES[b.defenderHouse];
+        const vote = b.voteMatch || VOTE_MATCHES[0];
+
+        const text = `[호그와트 마법사의 체스판 - 카톡 투표 매치!]\n\n` +
+            `⚔️ 격전 좌표: [${coord}]\n` +
+            `🦁 공격: ${atk.name} vs 🐍 방어: ${def.name}\n\n` +
+            `📌 배틀 종목: ${vote.title}\n` +
+            `📜 룰: ${vote.rule}\n` +
+            `⚖️ 투표 기준: ${vote.voteStandard}\n\n` +
+            `🗳️ 투표 선택지:\n` +
+            `1. ${atk.name} 측 제시 후보\n` +
+            `2. ${def.name} 측 제시 후보\n\n` +
+            `👉 다른 기숙사 분들은 더 공감/뒷목 잡히는 쪽에 투표해 주세요!`;
+
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("📋 카톡 투표 생성용 양식이 클립보드에 복사되었습니다!\n단톡방 투표 기능에 그대로 붙여넣으세요.");
+            });
+        } else {
+            prompt("아래 텍스트를 복사하세요:", text);
+        }
+    }
+
+    /* ========================================================
+       9. 모달 및 보조 도구
+       ======================================================== */
+    function openVoteMatchesModal() {
+        const list = document.getElementById('voteMatchesList');
+        list.innerHTML = VOTE_MATCHES.map((m, idx) => `
+        <div class="p-3 bg-hogwarts-card border border-hogwarts-border rounded-xl space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-hogwarts-gold text-xs">#${idx + 1}. ${m.title}</span>
+          </div>
+          <p class="text-slate-300 text-xs">${m.rule}</p>
+          <div class="text-[11px] text-amber-300/90 pt-1"><strong>⚖️ 판정:</strong> ${m.voteStandard}</div>
+          <div class="text-[10px] text-slate-400"><strong>예시:</strong> ${m.example}</div>
+        </div>
+      `).join('');
+        document.getElementById('voteMatchesModal').classList.remove('hidden');
+    }
+
+    function closeVoteMatchesModal() {
+        document.getElementById('voteMatchesModal').classList.add('hidden');
+    }
+
+    function openRulesModal() {
+        document.getElementById('rulesModal').classList.remove('hidden');
+    }
+
+    function closeRulesModal() {
+        document.getElementById('rulesModal').classList.add('hidden');
+    }
+
+    function exportData() {
+        const text = JSON.stringify(state, null, 2);
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("💾 체스판 영토 및 배틀 데이터가 클립보드에 복사되었습니다!");
+            });
+        } else {
+            prompt("아래 데이터를 복사하세요:", text);
+        }
+    }
+
+    function resetDataPrompt() {
+        const pw = prompt("초기화 관리자 비밀번호를 입력하세요 (0628):");
+        if (pw === "0628") {
+            if (confirm("모든 기숙사 영토와 공방전 기록을 최초 스타팅 상태로 리셋하시겠습니까?")) {
+                localStorage.removeItem("hogwarts_chess_battle_dopamine_v1");
+                initDefaultBoard();
+                renderAll();
+                alert("✨ 체스판이 초기화되었습니다!");
+            }
+        } else if (pw !== null) {
+            alert("비밀번호가 올바르지 않습니다.");
+        }
+    }
+
+    /* ========================================================
+       10. 시작 및 주기적 타이머 루프
+       ======================================================== */
+    loadState();
+    renderAll();
+    checkBattlesExpiry();
+    setInterval(checkBattlesExpiry, 60000);
+</script>
+</body>
+</html>
