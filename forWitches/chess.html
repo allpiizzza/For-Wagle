@@ -116,14 +116,11 @@
     <!-- 헤더 -->
     <header class="text-center mb-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hogwarts-card border border-hogwarts-gold/40 text-hogwarts-gold text-xs tracking-widest font-cinzel mb-2">
-            <span>⚡ WIZARD'S CHESS BATTLE & DOPAMINE VOTE ⚡</span>
+            <span>⚡ WITCHES'S CHESS BATTLE ⚡</span>
         </div>
         <h1 class="text-2xl sm:text-4xl font-black text-hogwarts-gold font-cinzel tracking-wide drop-shadow-md">
-            마법사의 체스판 : 4대 기숙사 영토점령전
+            1월 와글와트 기숙사배 체스대결
         </h1>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1">
-            《마법사의 돌》 실감 체스 격파 연출 • 도파민 폭발 카톡 투표 맞짱 & 12시간 턴제 공방전
-        </p>
     </header>
 
     <!-- 4대 기숙사 점령 현황 바 -->
@@ -379,7 +376,7 @@
             baseText: 'text-rose-400',
             borderColor: '#b91c1c',
             weapon: '🗡️ 고드릭의 은검',
-            pieceIcon: '♟️',
+            pieceIcon: '🦁',
             baseCoords: ['A1', 'A2', 'B1', 'B2']
         },
         slytherin: {
@@ -392,7 +389,7 @@
             baseText: 'text-emerald-400',
             borderColor: '#047857',
             weapon: '🗡️ 살라자르의 단검',
-            pieceIcon: '♞',
+            pieceIcon: '🐍',
             baseCoords: ['G7', 'G8', 'H7', 'H8']
         },
         ravenclaw: {
@@ -405,7 +402,7 @@
             baseText: 'text-blue-400',
             borderColor: '#1d4ed8',
             weapon: '🔱 독수리의 미늘창',
-            pieceIcon: '♝',
+            pieceIcon: '🦅',
             baseCoords: ['A7', 'A8', 'B7', 'B8']
         },
         hufflepuff: {
@@ -418,7 +415,7 @@
             baseText: 'text-yellow-400',
             borderColor: '#ca8a04',
             weapon: '🔨 헬가의 헤비메이스',
-            pieceIcon: '♜',
+            pieceIcon: '🦡',
             baseCoords: ['G1', 'G2', 'H1', 'H2']
         }
     };
@@ -897,7 +894,6 @@
             </div>
             <div class="flex items-baseline justify-between">
               <span class="text-xl font-black text-white font-cinzel">${count} <span class="text-xs font-normal text-slate-400">/ 64칸</span></span>
-              <span class="text-xs font-bold text-hogwarts-gold">${pct}%</span>
             </div>
             <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mt-2">
               <div class="h-full rounded-full transition-all duration-300" style="width: ${pct}%; background-color: ${h.lightColor};"></div>
