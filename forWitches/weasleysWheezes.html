@@ -274,34 +274,35 @@
         .badge-new { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
         .badge-rare { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
 
-        /* 🖼️ 카드 1/3을 꽉 채우는 큼직한 이미지/이모지 쇼케이스 /
+        /* 🖼️ 카드 상단 이미지/이모지 쇼케이스 (모든 카드 가로=세로 정사각형) */
         .item-media-showcase {
-          width: 100%;
-          height: 180px; / 카드 상단 약 3분의 1을 차지하는 시원한 크기 */
-        border-radius: 20px;
-        background: linear-gradient(135deg, #fffdf7 0%, #fff6e0 100%);
-        border: 1.5px solid #fde68a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 14px;
-        overflow: hidden;
-        position: relative;
-        box-shadow: inset 0 0 14px rgba(254, 240, 138, 0.35);
-        transition: transform 0.3s ease;
+            width: 100%;
+            aspect-ratio: 1 / 1; /* 가로와 세로를 동일하게 */
+            border-radius: 20px;
+            background: linear-gradient(135deg, #fffdf7 0%, #fff6e0 100%);
+            border: 1.5px solid #fde68a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 14px rgba(254, 240, 138, 0.35);
+            transition: transform 0.3s ease;
         }
 
         .item-card:hover .item-media-showcase {
             transform: scale(1.02);
         }
 
-        /* 큼직한 이미지 스타일 /
+        /* 정사각형 박스를 꽉 채우고, 가로·세로 중 넘치는 쪽을 중앙 기준으로 잘라냄 */
         .item-media-showcase img.showcase-img {
           width: 100%;
           height: 100%;
-          object-fit: cover; / 1/3 칸을 꽉 채워 풍성하게 */
-        display: block;
-        transition: transform 0.35s ease;
+          object-fit: cover;
+          object-position: center;
+          display: block;
+          transition: transform 0.35s ease;
         }
         .item-card:hover .item-media-showcase img.showcase-img {
             transform: scale(1.06);
@@ -783,8 +784,38 @@
 <script>
     const ADMIN_PW = "0628";
 
-    // 기본 시그니처 8개 아이템
+    // 기본 시그니처 아이템
     const DEFAULT_ITEMS = [
+        {
+            id: "item_cloak",
+            emoji: "🧥",
+            image: "assets/item/cloak.png",
+            name: "투명 망토 (Invisibility Cloak)",
+            badge: "RARE",
+            tag: "완벽한 은신 & 잠수 1일권",
+            price: 4,
+            desc: "뒤집어쓰면 흔적도 없이 사라지는 전설의 망토! 하루 동안 단톡방 알림과 출석 독촉에서 조용히 자취를 감출 수 있습니다."
+        },
+        {
+            id: "item_snitch",
+            emoji: "🏐",
+            image: "assets/item/golden.png",
+            name: "황금 스니치 (Golden Snitch)",
+            badge: "HOT",
+            tag: "선착순 포상 & 150점 보너스",
+            price: 3,
+            desc: "가장 먼저 낚아채는 사람이 임자! 이번 주 미션에서 번쩍이는 황금 스니치를 잡으면 기숙사 모래시계에 보너스 보석이 와르르."
+        },
+        {
+            id: "item_bomb",
+            emoji: "💣",
+            image: "assets/item/bomb.png",
+            name: "똥폭탄 (Dungbomb)",
+            badge: "NEW",
+            tag: "분위기 반전 & 깜짝 장난권",
+            price: 2,
+            desc: "펑! 터지면 지독한 냄새와 초록 연기가 자욱! 단톡방 분위기가 가라앉았을 때 하나 투척하면 모두가 빵 터지는 깜짝 장난권."
+        },
         {
             id: "item_1",
             emoji: "🍬",
@@ -874,7 +905,7 @@
 
     function loadData() {
         try {
-            const savedItems = localStorage.getItem("weasleys_jelly_items_v4");
+            const savedItems = localStorage.getItem("weasleys_jelly_items_v5");
             const savedCoupons = localStorage.getItem("weasleys_jelly_coupons_v4");
             const savedBag = localStorage.getItem("weasleys_jelly_bag_v4");
 
@@ -890,7 +921,7 @@
 
     function saveData() {
         try {
-            localStorage.setItem("weasleys_jelly_items_v4", JSON.stringify(items));
+            localStorage.setItem("weasleys_jelly_items_v5", JSON.stringify(items));
             localStorage.setItem("weasleys_jelly_coupons_v4", userCoupons.toString());
             localStorage.setItem("weasleys_jelly_bag_v4", JSON.stringify(myBag));
         } catch (e) {}
