@@ -234,9 +234,16 @@
     </style>
 </head>
 <body>
+<!-- 로비로 돌아가기 버튼 스타일 -->
+<style>
+.topbar{position:relative;}
+.back-to-lobby{position:absolute;top:0;left:0;z-index:5;display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:700;text-decoration:none;background:rgba(0,0,0,0.38);color:#fff;border:1px solid rgba(255,255,255,0.35);box-shadow:0 2px 8px rgba(0,0,0,0.25);backdrop-filter:blur(6px);transition:all .2s;}
+.back-to-lobby:hover{background:rgba(0,0,0,0.55);transform:translateX(-2px);}
+</style>
 <div class="app">
     <a class="back-link" href="https://for-wagle.vercel.app/">← For Wagle</a>
     <div class="topbar">
+        <a href="lobby.html" class="back-to-lobby">← 로비로 돌아가기</a>
         <h1>The Wagle&rsquo;s Map</h1>
         <p class="sub-ko">나는 천하의 멍텅구리임을 엄숙하게 선언합니다</p>
         <p class="oath">&ldquo;I solemnly swear that I am up to no good&rdquo;</p>

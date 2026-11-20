@@ -81,11 +81,42 @@
             background: linear-gradient(90deg, #ff70a6, #ff9770, #ffd670, #e9ff70, #70d6ff, #ff70a6);
             background-size: 200% 100%;
             animation: rainbowGlow 6s linear infinite;
+            z-index: 2;
+        }
+
+        /* 이미지 아래 빈 배경을 이미지 색감으로 블러 처리해 채움 */
+        header::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('assets/weasley.png') center bottom / cover no-repeat;
+            filter: blur(38px);
+            transform: scale(1.3);
+            opacity: 0.9;
+            z-index: 0;
         }
 
         @keyframes rainbowGlow {
             0% { background-position: 0% 0%; }
             100% { background-position: 200% 0%; }
+        }
+
+        .header-img {
+            display: block;
+            position: relative;
+            z-index: 1;
+            width: calc(100% + 36px);
+            height: auto;
+            margin: -26px -18px 14px;
+            border-top-left-radius: 29px;
+            border-top-right-radius: 29px;
+        }
+
+        .shop-pill,
+        header h1,
+        header p {
+            position: relative;
+            z-index: 1;
         }
 
         .shop-pill {
@@ -110,14 +141,26 @@
             font-weight: 800;
             color: #92400e;
             letter-spacing: -0.5px;
-            margin-bottom: 6px;
-            text-shadow: 0 0 15px rgba(253, 224, 71, 0.7), 2px 2px 0px #fff;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0px #fff;
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 10px rgba(146, 64, 14, 0.12);
         }
 
         header p {
             font-size: 13.5px;
             color: var(--text-sub);
             font-weight: 600;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 10px rgba(146, 64, 14, 0.12);
         }
 
         /* 🍺 대시보드 바 */
@@ -632,6 +675,11 @@
     </style>
 </head>
 <body>
+<!-- 로비로 돌아가기 버튼 스타일 -->
+<style>
+.back-to-lobby{position:absolute;top:12px;left:12px;z-index:5;display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:700;text-decoration:none;background:rgba(0,0,0,0.38);color:#fff;border:1px solid rgba(255,255,255,0.35);box-shadow:0 2px 8px rgba(0,0,0,0.25);backdrop-filter:blur(6px);transition:all .2s;}
+.back-to-lobby:hover{background:rgba(0,0,0,0.55);transform:translateX(-2px);}
+</style>
 
 <!-- 🍬 캔버스 배경: 젤리빈 & 네온 스파클 -->
 <canvas id="jellybeanCanvas"></canvas>
@@ -639,8 +687,10 @@
 <div class="container">
     <!-- 헤더 -->
     <header>
-        <div class="shop-pill">✨ WEASLEYS & HONEYDUKES SWEET SHOP ✨</div>
-        <h1>와즐리 자매의 장난감 가게 🍬</h1>
+        <a href="lobby.html" class="back-to-lobby">← 로비로 돌아가기</a>
+        <img src="assets/weasley.png" alt="와즐리 자매의 장난감 가게" class="header-img">
+        <div class="shop-pill">✨ WEASLEYS & HONEYDUKES SWEET SHOP ✨</div></br>
+        <h1>와즐리 자매의 장난감 가게 🍬</h1></br>
         <p>상점의 모든 마법 아이템은 <strong>🍺 버터맥주쿠폰</strong>으로 교환할 수 있습니다!</p>
     </header>
 
@@ -849,7 +899,7 @@
         {
             id: "item_4",
             emoji: "🧦",
-            image: "",
+            image: "assets/item/socks.png",
             name: "도비의 자유 양말",
             badge: "BEST",
             tag: "당당한 자유의 패스권",
@@ -895,6 +945,116 @@
             tag: "24시간 독서 프로필 마스코트",
             price: 3,
             desc: "지니 위즐리가 어깨에 얹고 다니던 분홍빛 털뭉치! 하루 동안 단톡방과 출석부에서 스페셜 마스코트 칭호를 얻습니다."
+        },
+        {
+            id: "item_wand",
+            emoji: "🪄",
+            image: "assets/item/wand.png",
+            name: "올리밴더의 맞춤 지팡이",
+            badge: "RARE",
+            tag: "각성 지팡이 1회 재선택권",
+            price: 4,
+            desc: "“지팡이가 마법사를 선택한다!” 올리밴더 보관소에서 내 속성에 꼭 맞는 지팡이를 한 번 더 고를 수 있는 재선택권."
+        },
+        {
+            id: "item_goblet",
+            emoji: "🏆",
+            image: "assets/item/goblet.png",
+            name: "불의 잔 (Goblet of Fire)",
+            badge: "HOT",
+            tag: "이번 주 챔피언 자동 출전권",
+            price: 3,
+            desc: "이름을 적어 넣으면 활활 타오르는 불꽃이 선택! 이번 주 미션 챔피언 후보로 자동 등록되어 보너스 보석에 도전합니다."
+        },
+        {
+            id: "item_felix",
+            emoji: "🧪",
+            image: "assets/item/golden_potion.png",
+            name: "펠릭스 펠리시스 (행운의 묘약)",
+            badge: "RARE",
+            tag: "하루 종일 행운 버프",
+            price: 5,
+            desc: "한 모금 마시면 하루 종일 하는 일마다 술술! 퀴즈·추첨·깜짝 이벤트에서 행운의 기운이 함께하는 황금빛 묘약."
+        },
+        {
+            id: "item_amortentia",
+            emoji: "💗",
+            image: "assets/item/lovepotion.png",
+            name: "아모르텐시아 (사랑의 묘약)",
+            badge: "HOT",
+            tag: "단톡방 인기 폭발 하트 세례",
+            price: 2,
+            desc: "세상에서 가장 좋아하는 향기가 피어오르는 묘약! 하루 동안 단톡방에서 내 글마다 하트와 응원이 쏟아집니다."
+        },
+        {
+            id: "item_patronus",
+            emoji: "🦌",
+            image: "assets/item/patronus.png",
+            name: "수호 패트로누스 (Patronus)",
+            badge: "BEST",
+            tag: "슬럼프 디멘터 방어막",
+            price: 3,
+            desc: "“엑스펙토 패트로눔!” 번아웃과 무기력의 디멘터가 몰려올 때, 은빛 수호자가 나를 지켜주는 멘탈 방어 마법."
+        },
+        {
+            id: "item_boggart",
+            emoji: "🫥",
+            image: "assets/item/boggart.png",
+            name: "보가트 (Boggart) 퇴치 세트",
+            badge: "NEW",
+            tag: "두려운 과제 리디큘러스!",
+            price: 2,
+            desc: "“리디큘러스!” 가장 미루고 싶던 과제·마감을 우스꽝스럽게 바꿔, 부담 없이 시작하게 도와주는 용기 충전 세트."
+        },
+        {
+            id: "item_dobby",
+            emoji: "🧝",
+            image: "assets/item/dobby.png",
+            name: "집요정 도비 소환권",
+            badge: "RARE",
+            tag: "귀찮은 심부름 대신 처리",
+            price: 3,
+            desc: "“도비는 돕는 것이 행복해요!” 자잘한 잡무나 정리 미션 1회를 도비가 대신 뚝딱 처리해 주는 소환권."
+        },
+        {
+            id: "item_gryffindor",
+            emoji: "🦁",
+            image: "assets/item/grf.png",
+            name: "그리핀도르 용기의 문장",
+            badge: "BEST",
+            tag: "기숙사 보너스 보석 +50",
+            price: 2,
+            desc: "용맹과 담력의 상징! 지니고 있으면 기숙사 모래시계에 즉시 보너스 보석 50개를 쏟아부어 주는 자랑스러운 문장."
+        },
+        {
+            id: "item_stone",
+            emoji: "💎",
+            image: "assets/item/stone.png",
+            name: "마법사의 돌 (Sorcerer's Stone)",
+            badge: "RARE",
+            tag: "버터쿠폰 1장 즉시 복구",
+            price: 5,
+            desc: "불로불사의 영약을 만든다는 전설의 붉은 돌! 사용하면 소모한 버터맥주쿠폰 1장을 마법처럼 되돌려 줍니다."
+        },
+        {
+            id: "item_ticket",
+            emoji: "🎫",
+            image: "assets/item/ticket.png",
+            name: "9와 4분의 3 승강장 티켓",
+            badge: "NEW",
+            tag: "호그와트 특급 우선 탑승권",
+            price: 2,
+            desc: "킹스크로스 벽을 통과하는 호그와트 특급 티켓! 다음 이벤트나 모임에서 우선 참가·우선 선택 권한을 보장합니다."
+        },
+        {
+            id: "item_pang",
+            emoji: "🎆",
+            image: "assets/item/pang.png",
+            name: "위즐리 필리버스터 폭죽 (팡!)",
+            badge: "HOT",
+            tag: "축하 세리머니 깜짝 발사권",
+            price: 2,
+            desc: "팡! 하늘을 수놓는 위즐리표 불꽃쇼! 누군가의 미션 달성이나 생일에 단톡방에서 화려한 축포를 터뜨리는 세리머니권."
         }
     ];
 
@@ -905,7 +1065,7 @@
 
     function loadData() {
         try {
-            const savedItems = localStorage.getItem("weasleys_jelly_items_v5");
+            const savedItems = localStorage.getItem("weasleys_jelly_items_v6");
             const savedCoupons = localStorage.getItem("weasleys_jelly_coupons_v4");
             const savedBag = localStorage.getItem("weasleys_jelly_bag_v4");
 
@@ -921,7 +1081,7 @@
 
     function saveData() {
         try {
-            localStorage.setItem("weasleys_jelly_items_v5", JSON.stringify(items));
+            localStorage.setItem("weasleys_jelly_items_v6", JSON.stringify(items));
             localStorage.setItem("weasleys_jelly_coupons_v4", userCoupons.toString());
             localStorage.setItem("weasleys_jelly_bag_v4", JSON.stringify(myBag));
         } catch (e) {}
