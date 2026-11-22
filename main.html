@@ -569,7 +569,7 @@
         } else {
             $('userInitial').textContent = name.charAt(0).toUpperCase();
         }
-        $('adminLink').hidden = !(member && member.is_admin);
+        $('adminLink').hidden = !(member && member.auth_level === 0);
     }
 
     async function render(session) {
@@ -579,7 +579,7 @@
         show('loading');
         const { data: member, error } = await sb
             .from('members')
-            .select('status, is_admin, name')
+            .select('status, auth_level, name')
             .eq('id', user.id)
             .maybeSingle();
 

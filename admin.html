@@ -179,6 +179,21 @@
             color: #1d4ed8;
         }
         .badge.me { background: #dcfce7; color: #15803d; }
+        .badge.lv0 { background: #fee2e2; color: #b91c1c; }
+        .badge.lv1 { background: #fef3c7; color: #b45309; }
+        .badge.lv2 { background: #dbeafe; color: #1d4ed8; }
+        .badge.lv3 { background: #f1f5f9; color: #475569; }
+        .level-select {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 5px 8px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+        }
+        .level-select:hover, .level-select:focus { border-color: #3b82f6; outline: none; }
         .email, .date {
             font-size: 0.74rem;
             color: #64748b;
@@ -319,6 +334,8 @@
         console.warn('Supabase 초기화 실패:', e);
     }
 
+    const LEVELS = ['관리자', '이벤트팀', '일반 팀원', '신입'];
+
     let me = null;
     let members = [];
     let currentTab = 'pending';
@@ -356,11 +373,6 @@
         if (m.status !== 'approved') list.push(['승인', 'approve', () => setStatus(m, 'approved')]);
         if (m.status !== 'rejected') list.push(['거절', 'reject', () => setStatus(m, 'rejected')]);
         if (m.status !== 'pending') list.push(['대기로', '', () => setStatus(m, 'pending')]);
-        if (m.status === 'approved') {
-            list.push(m.is_admin
-                ? ['관리자 해제', '', () => setAdmin(m, false)]
-                : ['관리자 지정', '', () => setAdmin(m, true)]);
-        }
         return list;
     }
 
@@ -403,7 +415,7 @@
 
             const info = el('div', 'info');
             const nameRow = el('div', 'name', name);
-            if (m.is_admin) nameRow.append(el('span', 'badge', '관리자'));
+            nameRow.append(el('span', 'badge lv' + m.auth_level, LEVELS[m.auth_level] || ('등급 ' + m.auth_level)));
             if (m.id === me.id) nameRow.append(el('span', 'badge me', '나'));
             info.append(nameRow, el('div', 'email', m.email || ''));
             const dateText = m.status === 'pending'
@@ -413,6 +425,20 @@
 
             const actions = el('div', 'actions');
             if (m.id !== me.id) {
+                const sel = el('select', 'level-select');
+                sel.setAttribute('aria-label', '등급');
+                LEVELS.forEach((label, lv) => {
+                    const o = el('option', null, `${lv} · ${label}`);
+                    o.value = lv;
+                    o.selected = lv === m.auth_level;
+                    sel.append(o);
+                });
+                sel.addEventListener('change', async () => {
+                    sel.disabled = true;
+                    await setLevel(m, Number(sel.value));
+                });
+                actions.append(sel);
+
                 actionsFor(m).forEach(([label, kind, fn]) => {
                     const b = el('button', 'act' + (kind ? ' ' + kind : ''), label);
                     b.type = 'button';
@@ -432,7 +458,7 @@
     async function loadMembers() {
         const { data, error } = await sb
             .from('members')
-            .select('id, email, name, avatar_url, status, is_admin, created_at, decided_at')
+            .select('id, email, name, avatar_url, status, auth_level, created_at, decided_at')
             .order('created_at', { ascending: false });
         if (error) {
             toast('목록을 불러오지 못했어요: ' + error.message, true);
@@ -453,16 +479,16 @@
         await loadMembers();
     }
 
-    async function setAdmin(m, makeAdmin) {
-        if (makeAdmin && !confirm(`${m.name || m.email} 님을 관리자로 지정할까요?\n회원 승인·거절을 할 수 있게 돼요.`)) {
+    async function setLevel(m, level) {
+        if (level === 0 && !confirm(`${m.name || m.email} 님을 관리자로 지정할까요?\n회원 승인·거절과 등급 변경을 할 수 있게 돼요.`)) {
             renderList();
             return;
         }
-        const { error } = await sb.rpc('set_member_admin', { target: m.id, make_admin: makeAdmin });
+        const { error } = await sb.rpc('set_member_level', { target: m.id, new_level: level });
         if (error) {
             toast('실패했어요: ' + error.message, true);
         } else {
-            toast(makeAdmin ? '관리자로 지정했어요' : '관리자 권한을 해제했어요');
+            toast(`${m.name || m.email} 님을 ${LEVELS[level]}(으)로 바꿨어요`);
         }
         await loadMembers();
     }
@@ -475,11 +501,11 @@
         show('loading');
         const { data: mine, error } = await sb
             .from('members')
-            .select('status, is_admin')
+            .select('status, auth_level')
             .eq('id', user.id)
             .maybeSingle();
 
-        if (error || !mine || !mine.is_admin || mine.status !== 'approved') {
+        if (error || !mine || mine.auth_level !== 0 || mine.status !== 'approved') {
             $('deniedEmail').textContent = (user.email || '') + ' 계정은 관리자가 아니에요.';
             show('denied');
             return;
