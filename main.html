@@ -356,6 +356,39 @@
         }
         .logout-btn:hover { border-color: #3b82f6; color: #1d4ed8; }
 
+        .status-emoji {
+            font-size: 2.4rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .ghost-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .ghost-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 9px 16px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+        }
+        .ghost-btn:hover { border-color: #3b82f6; color: #1d4ed8; }
+        .admin-link {
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: #2563eb;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .admin-link:hover { background: #1d4ed8; }
+
         [hidden] { display: none !important; }
 
         @media (prefers-reduced-motion: reduce) {
@@ -394,6 +427,18 @@
         <div class="login-msg" id="loginMsg"></div>
     </section>
 
+    <section class="login" id="waiting" hidden>
+        <span class="status-emoji" id="waitEmoji">⏳</span>
+        <h2 id="waitTitle">승인을 기다리고 있어요</h2>
+        <p id="waitDesc">관리자가 확인한 뒤 승인하면<br>바로가기를 이용할 수 있어요.</p>
+        <p id="waitEmail" style="margin-top:-12px;font-size:0.78rem;color:#94a3b8;"></p>
+        <div class="ghost-row">
+            <button class="ghost-btn" id="refreshBtn" type="button">상태 새로고침</button>
+            <button class="ghost-btn" id="waitLogoutBtn" type="button">로그아웃</button>
+        </div>
+        <div class="login-msg" id="waitMsg"></div>
+    </section>
+
     <main class="list" id="app" hidden>
         <div class="user-bar">
             <img class="avatar" id="userAvatar" alt="" hidden>
@@ -402,6 +447,7 @@
                 <span class="user-name" id="userName">와글러</span>
                 <span class="user-email" id="userEmail"></span>
             </span>
+            <a class="admin-link" id="adminLink" href="admin.html" hidden>관리자</a>
             <button class="logout-btn" id="logoutBtn" type="button">로그아웃</button>
         </div>
 
@@ -505,15 +551,14 @@
         console.warn('Supabase 초기화 실패:', e);
     }
 
-    function render(session) {
-        $('loading').hidden = true;
-        const user = session && session.user;
-        $('login').hidden = !!user;
-        $('app').hidden = !user;
-        if (!user) return;
+    function show(view) {
+        ['loading', 'login', 'waiting', 'app'].forEach(id => { $(id).hidden = id !== view; });
+    }
 
+    function fillUser(user, member) {
         const meta = user.user_metadata || {};
-        const name = meta.full_name || meta.name || (user.email || '').split('@')[0] || '와글러';
+        const name = (member && member.name) || meta.full_name || meta.name
+            || (user.email || '').split('@')[0] || '와글러';
         $('userName').textContent = name;
         $('userEmail').textContent = user.email || '';
         const pic = meta.avatar_url || meta.picture;
@@ -524,6 +569,37 @@
         } else {
             $('userInitial').textContent = name.charAt(0).toUpperCase();
         }
+        $('adminLink').hidden = !(member && member.is_admin);
+    }
+
+    async function render(session) {
+        const user = session && session.user;
+        if (!user) { show('login'); return; }
+
+        show('loading');
+        const { data: member, error } = await sb
+            .from('members')
+            .select('status, is_admin, name')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (error) console.warn('회원 정보 조회 실패:', error);
+
+        if (member && member.status === 'approved') {
+            fillUser(user, member);
+            show('app');
+            return;
+        }
+
+        const rejected = member && member.status === 'rejected';
+        $('waitEmoji').textContent = rejected ? '🙅' : '⏳';
+        $('waitTitle').textContent = rejected ? '승인되지 않은 계정이에요' : '승인을 기다리고 있어요';
+        $('waitDesc').innerHTML = rejected
+            ? '이 계정으로는 이용할 수 없어요.<br>잘못된 경우 운영진에게 문의해 주세요.'
+            : '관리자가 확인한 뒤 승인하면<br>바로가기를 이용할 수 있어요.';
+        $('waitEmail').textContent = user.email || '';
+        $('waitMsg').textContent = error ? '회원 정보를 불러오지 못했어요.' : '';
+        show('waiting');
     }
 
     $('googleBtn').addEventListener('click', async () => {
@@ -540,16 +616,24 @@
         }
     });
 
-    $('logoutBtn').addEventListener('click', async () => {
+    async function logout() {
         if (sb) await sb.auth.signOut();
-        render(null);
+        show('login');
+    }
+    $('logoutBtn').addEventListener('click', logout);
+    $('waitLogoutBtn').addEventListener('click', logout);
+    $('refreshBtn').addEventListener('click', async () => {
+        const { data } = await sb.auth.getSession();
+        render(data.session);
     });
 
     if (sb) {
-        sb.auth.onAuthStateChange((_event, session) => render(session));
-        sb.auth.getSession().then(({ data }) => render(data.session));
+        // 콜백 안에서 바로 다른 Supabase 호출을 await 하면 멈출 수 있어서 한 박자 미룸
+        sb.auth.onAuthStateChange((_event, session) => {
+            setTimeout(() => render(session), 0);
+        });
     } else {
-        render(null);
+        show('login');
         $('loginMsg').textContent = '로그인 서비스를 불러오지 못했어요.';
     }
 </script>
