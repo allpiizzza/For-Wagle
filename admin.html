@@ -468,8 +468,21 @@
         renderList();
     }
 
+    // 관리자만 수정 가능 (DB 규칙). 처리 시각·처리자는 DB 트리거가 자동 기록
+    async function updateMember(id, changes) {
+        const { data, error } = await sb
+            .from('members')
+            .update(changes)
+            .eq('id', id)
+            .select('id');
+        if (error) return error;
+        // 권한이 없으면 에러 없이 0줄이 바뀌므로 따로 확인
+        if (!data || !data.length) return { message: '권한이 없거나 회원을 찾을 수 없어요' };
+        return null;
+    }
+
     async function setStatus(m, status) {
-        const { error } = await sb.rpc('set_member_status', { target: m.id, new_status: status });
+        const error = await updateMember(m.id, { status });
         if (error) {
             toast('실패했어요: ' + error.message, true);
         } else {
@@ -484,7 +497,7 @@
             renderList();
             return;
         }
-        const { error } = await sb.rpc('set_member_level', { target: m.id, new_level: level });
+        const error = await updateMember(m.id, { auth_level: level });
         if (error) {
             toast('실패했어요: ' + error.message, true);
         } else {

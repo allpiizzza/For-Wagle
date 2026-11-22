@@ -1,13 +1,20 @@
 -- =====================================================================
--- 와글 회원 승인 구조
+-- 와글 회원 승인 구조 (화면에서 insert / update 하는 버전)
 -- Supabase 대시보드 → SQL Editor 에 통째로 붙여넣고 한 번 실행하세요.
--- (여러 번 실행해도 안전하고, 예전 is_admin 버전을 이미 실행했어도 그대로 옮겨져요)
+-- 여러 번 실행해도 안전하고, 예전 버전(트리거·함수 방식, is_admin 컬럼)을
+-- 이미 실행했어도 이 버전으로 정리돼요.
 --
 -- auth_level (숫자가 작을수록 권한이 높아요)
 --   0 = 관리자     회원 승인·거절, 등급 변경
 --   1 = 이벤트팀
 --   2 = 일반 팀원
 --   3 = 신입       (처음 가입하면 기본값)
+--
+-- 누가 무엇을 할 수 있나
+--   - 로그인한 사람: 자기 회원 줄을 '승인 대기 + 신입' 으로만 insert 가능
+--   - 회원: 자기 줄만 조회
+--   - 관리자(0): 전체 조회, 다른 회원의 status / auth_level update
+--   - 관리자도 자기 status / auth_level 은 못 바꿈 (실수로 권한 잃는 것 방지)
 -- =====================================================================
 
 -- 1) 회원 테이블
@@ -42,46 +49,18 @@ begin
 end;
 $$;
 
-drop function if exists public.set_member_admin(uuid, boolean);
-
 comment on column public.members.auth_level is '0=관리자, 1=이벤트팀, 2=일반 팀원, 3=신입';
+
+-- 예전 버전의 자동 생성 트리거와 관리자 함수 정리 (이제 화면에서 직접 씀)
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_member();
+drop function if exists public.set_member_admin(uuid, boolean);
+drop function if exists public.set_member_status(uuid, text);
+drop function if exists public.set_member_level(uuid, int);
 
 alter table public.members enable row level security;
 
--- 2) 구글로 처음 로그인하면 '승인 대기 + 신입(3)' 회원 자동 생성
-create or replace function public.handle_new_member()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-    insert into public.members (id, email, name, avatar_url)
-    values (
-        new.id,
-        new.email,
-        coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
-        coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture')
-    )
-    on conflict (id) do nothing;
-    return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-    after insert on auth.users
-    for each row execute function public.handle_new_member();
-
--- 이미 로그인해 본 계정도 회원 테이블에 채워 넣기
-insert into public.members (id, email, name, avatar_url)
-select id,
-       email,
-       coalesce(raw_user_meta_data->>'full_name', raw_user_meta_data->>'name'),
-       coalesce(raw_user_meta_data->>'avatar_url', raw_user_meta_data->>'picture')
-from auth.users
-on conflict (id) do nothing;
-
--- 3) 권한 확인 함수 (다른 테이블 RLS 에서도 재사용 가능)
+-- 2) 권한 확인 함수 (아래 규칙과 다른 테이블 RLS 에서 재사용)
 
 -- 승인된 회원 중 등급이 max_level 이하인지
 --   예) has_level(1) → 관리자·이벤트팀만 true
@@ -112,72 +91,82 @@ as $$
     select public.has_level(3);
 $$;
 
--- 4) 조회 규칙: 본인 줄은 본인이, 전체는 관리자만
+-- 3) 테이블 권한 (실제 허용 범위는 아래 RLS 규칙이 정해요)
+grant select, insert, update on public.members to authenticated;
+revoke delete on public.members from authenticated, anon;
+revoke all on public.members from anon;
+
+-- 4) RLS 규칙
 drop policy if exists "members: 본인 또는 관리자 조회" on public.members;
 create policy "members: 본인 또는 관리자 조회"
     on public.members for select
     to authenticated
     using (id = auth.uid() or public.is_admin());
 
--- 추가/수정/삭제 규칙은 일부러 없음 → 회원이 스스로 승인하거나 등급을 올릴 수 없음
--- 상태·등급 변경은 아래 관리자 전용 함수로만 가능
+-- 본인 줄만, '승인 대기 + 신입' 으로만, 로그인한 구글 이메일 그대로만 insert 가능
+drop policy if exists "members: 본인 가입 신청" on public.members;
+create policy "members: 본인 가입 신청"
+    on public.members for insert
+    to authenticated
+    with check (
+        id = auth.uid()
+        and status = 'pending'
+        and auth_level = 3
+        and decided_at is null
+        and decided_by is null
+        and email = (auth.jwt() ->> 'email')
+    );
 
--- 5) 관리자 전용: 승인 / 거절 / 대기로 되돌리기
-create or replace function public.set_member_status(target uuid, new_status text)
-returns void
+-- 관리자만 update 가능
+drop policy if exists "members: 관리자 수정" on public.members;
+create policy "members: 관리자 수정"
+    on public.members for update
+    to authenticated
+    using (public.is_admin())
+    with check (public.is_admin());
+
+-- 5) update 검사 트리거
+--    - 관리자가 자기 status / auth_level 을 바꾸는 것 차단
+--    - id, created_at 은 못 바꿈
+--    - status 가 바뀌면 decided_at / decided_by 자동 기록
+--    (SQL Editor 에서 직접 실행할 때는 auth.uid() 가 없어서 자기 자신 검사는 건너뜀)
+create or replace function public.guard_member_update()
+returns trigger
 language plpgsql
-security definer set search_path = public
+set search_path = public
 as $$
 begin
-    if not public.is_admin() then
-        raise exception '관리자만 할 수 있어요';
-    end if;
-    if new_status not in ('pending', 'approved', 'rejected') then
-        raise exception '잘못된 상태값: %', new_status;
-    end if;
-    if target = auth.uid() then
-        raise exception '본인 상태는 바꿀 수 없어요';
+    if new.id <> old.id or new.created_at <> old.created_at then
+        raise exception 'id, created_at 은 바꿀 수 없어요';
     end if;
 
-    update public.members
-       set status     = new_status,
-           decided_at = case when new_status = 'pending' then null else now() end,
-           decided_by = case when new_status = 'pending' then null else auth.uid() end
-     where id = target;
+    if old.id = auth.uid()
+       and (new.status <> old.status or new.auth_level <> old.auth_level) then
+        raise exception '본인 상태나 등급은 바꿀 수 없어요';
+    end if;
+
+    if new.status <> old.status then
+        if new.status = 'pending' then
+            new.decided_at := null;
+            new.decided_by := null;
+        else
+            new.decided_at := now();
+            new.decided_by := auth.uid();
+        end if;
+    end if;
+
+    return new;
 end;
 $$;
 
--- 6) 관리자 전용: 등급 변경 (0=관리자, 1=이벤트팀, 2=일반 팀원, 3=신입)
-create or replace function public.set_member_level(target uuid, new_level int)
-returns void
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-    if not public.is_admin() then
-        raise exception '관리자만 할 수 있어요';
-    end if;
-    if new_level not between 0 and 3 then
-        raise exception '잘못된 등급: %', new_level;
-    end if;
-    if target = auth.uid() then
-        raise exception '본인 등급은 바꿀 수 없어요';
-    end if;
-
-    update public.members
-       set auth_level = new_level
-     where id = target;
-end;
-$$;
-
-revoke all on function public.set_member_status(uuid, text) from public, anon;
-revoke all on function public.set_member_level(uuid, int) from public, anon;
-grant execute on function public.set_member_status(uuid, text) to authenticated;
-grant execute on function public.set_member_level(uuid, int) to authenticated;
+drop trigger if exists members_guard_update on public.members;
+create trigger members_guard_update
+    before update on public.members
+    for each row execute function public.guard_member_update();
 
 -- =====================================================================
--- 7) 첫 관리자 지정 (최초 1회)
---    main.html 에서 본인 구글 계정으로 한 번 로그인한 뒤,
+-- 6) 첫 관리자 지정 (최초 1회)
+--    main.html 에서 본인 구글 계정으로 한 번 로그인해서 '승인 대기' 화면이 뜬 뒤,
 --    아래 이메일을 본인 것으로 바꿔서 이 줄만 따로 실행하세요.
 -- =====================================================================
 -- update public.members set status = 'approved', auth_level = 0
