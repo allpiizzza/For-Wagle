@@ -14,26 +14,22 @@
             --muted: #94a3b8;
             --line: #e8edf3;
             --bg: #f4f6fa;
-            --amber-soft: #fffbeb;
-            --amber: #f59e0b;
             --red: #dc2626;
-            --red-soft: #fef2f2;
             --green: #16a34a;
-            --green-soft: #f0fdf4;
-            --hl: #fde68a;
+            --wood-1: #d9b98f;
+            --wood-2: #b98c5c;
         }
         * {
             box-sizing: border-box;
             font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
         }
-        html { scroll-behavior: smooth; }
         body {
             margin: 0;
             padding: 20px 16px 40px;
             background: var(--bg);
             color: var(--ink);
             font-size: 15px;
-            line-height: 1.75;
+            line-height: 1.6;
             word-break: keep-all;
             overflow-wrap: break-word;
             -webkit-tap-highlight-color: transparent;
@@ -68,389 +64,316 @@
             font-weight: 800;
             letter-spacing: -0.02em;
         }
+        .hero p {
+            margin: 4px 0 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
 
-        /* 목차 */
-        .toc {
+        /* 상단 바: 요약 + 범례 */
+        .bar {
             position: sticky;
             top: 0;
             z-index: 10;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
+            justify-content: space-between;
+            gap: 6px 12px;
+            padding: 10px 18px;
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--line);
+            font-size: 0.78rem;
+            color: var(--muted);
         }
-        .toc-links {
+        .legend {
             display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            flex: 1;
-            padding-right: 24px;
-            /* 오른쪽 끝을 흐리게 → 옆으로 더 있다는 힌트 */
-            -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-            mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+            gap: 10px;
         }
-        .toc-links::-webkit-scrollbar { display: none; }
-        .toc a, .toc button {
-            flex-shrink: 0;
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 8px 12px;
-            border-radius: 999px;
-            text-decoration: none;
-            white-space: nowrap;
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
-        .toc a {
-            color: var(--ink-2);
-            background: #f1f5f9;
+        .legend i {
+            display: inline-block;
+            width: 9px;
+            height: 14px;
+            border-radius: 2px;
         }
-        .toc a:hover { background: var(--blue-soft); color: var(--blue); }
-        .toc button {
-            border: 1px solid var(--line);
-            background: #ffffff;
-            color: var(--blue);
-            cursor: pointer;
-        }
+        .lg-read { background: #64748b; }
+        .lg-next { background: #e2e8f0; border: 1.5px solid #64748b; box-shadow: 0 0 0 2px #fde68a; }
+        .lg-todo { background: #ffffff; border: 1.5px dashed #94a3b8; }
 
-        /* 섹션 */
-        section {
-            padding: 28px 22px 24px;
-            scroll-margin-top: 56px;
+        main { padding: 18px 22px 24px; }
+
+        /* ===== 책장 한 칸 ===== */
+        .shelf {
+            margin: 0 0 22px;
         }
-        section + section { border-top: 8px solid var(--bg); }
-        .sec-head {
+        .shelf-head {
             display: flex;
             align-items: baseline;
+            justify-content: space-between;
             gap: 10px;
-            margin-bottom: 14px;
+            margin-bottom: 4px;
+            padding: 0 2px;
         }
-        .sec-num {
-            font-size: 0.8rem;
+        .shelf-name {
             font-weight: 800;
-            color: var(--blue);
-            letter-spacing: 0.04em;
+            font-size: 1rem;
+            color: var(--ink);
         }
-        h2 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: -0.01em;
+        .shelf-name::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--c);
+            margin-right: 7px;
+            vertical-align: 2px;
         }
-        p { margin: 0 0 10px; }
-        strong { font-weight: 700; color: var(--ink); }
-        /* 밑줄 강조 → 형광펜 */
-        /* 빨간 물결 밑줄 */
-        .wavy {
-            text-decoration: underline wavy #ef4444;
-            text-decoration-thickness: 1.5px;
-            text-underline-offset: 5px;
-            text-decoration-skip-ink: none;
+        .host {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 8px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--c) 12%, #ffffff);
+            color: var(--c);
+            font-size: 0.72rem;
+            font-weight: 700;
+            vertical-align: 2px;
+            white-space: nowrap;
         }
-        u {
-            text-decoration: none;
-            background: linear-gradient(transparent 58%, var(--hl) 58%);
+        .shelf-count {
+            flex-shrink: 0;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--muted);
         }
+        .shelf-count.done { color: var(--green); }
 
-        /* 강조 박스 */
-        .note {
-            border-left: 4px solid var(--blue);
-            background: var(--blue-soft);
-            border-radius: 0 12px 12px 0;
-            padding: 12px 16px;
-            margin: 12px 0;
-        }
-        .note.warn { border-color: var(--red); background: var(--red-soft); }
-        .note.tip { border-color: var(--amber); background: var(--amber-soft); }
-        .note p { margin-bottom: 4px; }
-        .note p:last-child { margin-bottom: 0; }
-        .note ul:last-child { margin-bottom: 0; }
-
-        /* 일반 목록 */
-        ul {
-            margin: 6px 0 10px;
-            padding-left: 0;
-            list-style: none;
-        }
-        ul > li {
+        /* 책장이 넘치면 옆으로 밀어서 보기 */
+        .shelf-scroll {
             position: relative;
-            padding-left: 16px;
-            margin: 6px 0;
-            color: var(--ink-2);
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px 12px 5px 5px;
         }
-        ul > li::before {
+        .shelf-scroll::-webkit-scrollbar { display: none; }
+        .shelf-inner {
+            width: max-content;
+            min-width: 100%;
+            padding-bottom: 10px; /* 선반 그림자 자리 */
+        }
+        /* 밀 수 있을 때 오른쪽 끝을 흐리게 */
+        .shelf-wrap { position: relative; }
+        .shelf-wrap.more::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 28px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0), #ffffff);
+            pointer-events: none;
+            border-radius: 0 12px 0 0;
+        }
+        .shelf-hint {
+            display: none;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-left: 6px;
+        }
+        .shelf.scrollable .shelf-hint { display: inline; }
+        .books {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            min-height: 220px;
+            padding: 36px 10px 0;
+            background: linear-gradient(#fbf8f3, #f5efe6);
+            border-radius: 12px 12px 0 0;
+        }
+        .plank {
+            height: 11px;
+            background: linear-gradient(var(--wood-1), var(--wood-2));
+            border-radius: 2px 2px 5px 5px;
+            box-shadow: 0 4px 8px rgba(120, 80, 40, 0.18);
+        }
+
+        /* 책등 */
+        .spine {
+            --h: 120px;
+            position: relative;
+            flex: 0 0 36px;
+            height: var(--h);
+            padding: 0;
+            border: none;
+            border-radius: 3px 3px 1px 1px;
+            background: var(--c);
+            color: #ffffff;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(.3, 1.4, .5, 1), box-shadow 0.2s;
+            animation: drop 0.5s ease backwards;
+            animation-delay: calc(var(--i) * 0.04s);
+        }
+        /* 책마다 살짝 다른 색 */
+        .spine:nth-child(3n+2) { filter: brightness(1.13) saturate(0.9); }
+        .spine:nth-child(3n) { filter: brightness(0.9); }
+        /* 책등 장식 띠 */
+        .spine::before, .spine::after {
             content: "";
             position: absolute;
             left: 3px;
-            top: 0.75em;
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--muted);
+            right: 3px;
+            height: 2px;
+            background: currentColor;
+            opacity: 0.35;
         }
-
-        /* 번호 목록 */
-        ol {
-            margin: 6px 0 10px;
-            padding-left: 0;
-            list-style: none;
-            counter-reset: step;
-        }
-        ol > li {
-            position: relative;
-            counter-increment: step;
-            padding-left: 34px;
-            margin: 0;
-            padding-top: 10px;
-            padding-bottom: 10px;
-        }
-        ol > li + li { border-top: 1px solid var(--line); }
-        ol > li::before {
-            content: counter(step);
+        .spine::before { top: 7px; }
+        .spine::after { bottom: 7px; }
+        /* 책등 제목: 세로쓰기, 길면 글씨를 줄이고 두 줄로 */
+        .spine-title {
             position: absolute;
-            left: 0;
-            top: 12px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: var(--blue-soft);
-            color: var(--blue);
-            font-size: 0.75rem;
-            font-weight: 800;
+            top: 14px;
+            bottom: 14px;
+            left: 2px;
+            right: 2px;
             display: flex;
             align-items: center;
-            justify-content: center;
-        }
-        /* 목록 안의 작은 번호 목록 */
-        ol ol > li {
-            padding-top: 4px;
-            padding-bottom: 4px;
-            padding-left: 26px;
-            border-top: none;
-            color: var(--ink-2);
-        }
-        ol ol > li::before {
-            top: 7px;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
-            background: #f1f5f9;
-            color: var(--ink-2);
-        }
-        .sub {
-            display: block;
-            font-size: 0.88rem;
-            color: var(--muted);
-        }
-        .bad { color: var(--red); }
-
-        /* 양식 */
-        .template {
-            margin: 10px 0;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 12px;
-            font-size: 0.88rem;
-            color: var(--ink-2);
-            white-space: pre-line;
-            line-height: 1.8;
-        }
-        /* 설명 이미지 */
-        .shot { margin: 10px 0 4px; }
-        .shot-scroll {
-            overflow-x: auto;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            background: #ffffff;
-            -webkit-overflow-scrolling: touch;
-        }
-        .shot img {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
-        .shot figcaption {
-            margin-top: 4px;
-            font-size: 0.78rem;
-            color: var(--muted);
-        }
-        .shot-hint { display: none; }
-        @media (max-width: 700px) {
-            .shot-hint { display: inline; }
-            /* 폰에서 글씨가 너무 작아지지 않게 → 옆으로 밀어서 보기 */
-            .shot img { min-width: 640px; }
-        }
-
-        /* 방 나누기 예시 표 */
-        .split-table { margin: 10px 0 6px; }
-        .split-table table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            border: 1px solid var(--line);
-            border-radius: 12px;
+            justify-content: flex-start;
+            writing-mode: vertical-lr; /* 두 줄일 때 왼쪽 줄부터 */
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: 0.01em;
+            word-break: keep-all;
             overflow: hidden;
-            font-size: 0.88rem;
-            text-align: center;
         }
-        .split-title {
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--muted);
-            margin-bottom: 6px;
+        .tcy {
+            text-combine-upright: all;
+            -webkit-text-combine: horizontal;
         }
-        .split-table th {
-            background: var(--blue-soft);
-            color: var(--blue);
-            font-weight: 700;
-            padding: 8px 6px;
-        }
-        .split-table td {
-            padding: 7px 6px;
-            border-top: 1px solid var(--line);
-            color: var(--ink-2);
-        }
-        .split-table td:first-child { font-weight: 700; color: var(--ink); }
-        .split-table th + th,
-        .split-table td + td { border-left: 1px solid var(--line); }
-
-        /* 단계 소제목 (총대 가이드) */
-        .stage {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 20px 0 2px;
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: var(--ink);
-        }
-        .toggle-body > .stage:first-child { margin-top: 6px; }
-        .stage .step {
-            font-size: 0.68rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
-            color: #ffffff;
-            background: var(--blue);
-            border-radius: 999px;
-            padding: 2px 8px;
-        }
-
-        .template-label {
-            display: block;
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--muted);
-            margin-bottom: 2px;
-        }
-
-        /* 토글 */
-        details {
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            margin: 10px 0;
-            background: #ffffff;
-            transition: border-color 0.15s, box-shadow 0.15s;
-        }
-        details[open] {
-            border-color: #bfdbfe;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.06);
-        }
-        summary {
-            cursor: pointer;
-            list-style: none;
-            position: relative;
-            display: block;
-            padding: 14px 44px 14px 16px;
-            font-weight: 700;
-        }
-        summary::-webkit-details-marker { display: none; }
-        summary::after {
-            content: "";
+        .spine-check {
             position: absolute;
-            right: 18px;
-            top: 50%;
-            width: 8px;
-            height: 8px;
-            margin-top: -6px;
-            border-right: 2px solid var(--muted);
-            border-bottom: 2px solid var(--muted);
-            transform: rotate(45deg);
-            transition: transform 0.2s;
+            left: 50%;
+            bottom: 12px;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 900;
+            opacity: 0.85;
         }
-        details[open] > summary::after {
-            margin-top: -2px;
-            transform: rotate(-135deg);
-            border-color: var(--blue);
+        .spine.read .spine-title { bottom: 24px; }
+
+        /* 아직 안 읽은 책: 테두리만 */
+        .spine.todo {
+            background: #ffffff;
+            color: var(--c);
+            box-shadow: inset 0 0 0 1.5px var(--c);
+            filter: none;
+            opacity: 0.75;
         }
-        details[open] > summary {
-            color: var(--blue);
-            border-bottom: 1px solid var(--line);
+        .spine.todo::before, .spine.todo::after { opacity: 0.25; }
+
+        /* 다음 책: 살짝 뽑혀 나와 반짝 */
+        .spine.next {
+            background: color-mix(in srgb, var(--c) 16%, #ffffff);
+            color: var(--c);
+            box-shadow: inset 0 0 0 2px var(--c), 0 0 0 3px #fde68a;
+            filter: none;
+            opacity: 1;
+            transform: translateY(-10px);
         }
-        summary:hover { color: var(--blue); }
-        .toggle-body {
-            padding: 12px 18px 16px;
+        .spine.next .spine-pin {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 900;
+            color: #ffffff;
+            background: var(--red);
+            border-radius: 999px;
+            padding: 1px 5px;
+            white-space: nowrap;
+            line-height: 1.4;
         }
 
-        /* 함께 지켜요 */
-        .promise li {
-            padding: 12px 0 12px 26px;
-            margin: 0;
+        /* 누른 책: 위로 뽑힘 */
+        .spine.selected {
+            transform: translateY(-16px);
+            box-shadow: 0 8px 14px rgba(15, 23, 42, 0.18);
+            z-index: 1;
+        }
+        .spine.next.selected {
+            box-shadow: inset 0 0 0 2px var(--c), 0 0 0 3px #fde68a, 0 8px 14px rgba(15, 23, 42, 0.18);
+        }
+        .spine.todo.selected { opacity: 1; }
+        @media (hover: hover) {
+            .spine:not(.selected):hover { transform: translateY(-6px); }
+            .spine.next:not(.selected):hover { transform: translateY(-13px); }
+        }
+        .spine:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+        @keyframes drop {
+            from { opacity: 0; transform: translateY(-14px); }
+        }
+
+        /* 책 정보 카드 */
+        .info {
+            display: none;
+            margin-top: 10px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--c);
+            border-radius: 4px 12px 12px 4px;
+            background: #ffffff;
+            animation: pop 0.2s ease;
+        }
+        .info.show { display: block; }
+        @keyframes pop {
+            from { opacity: 0; transform: translateY(-4px); }
+        }
+        .info-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--muted);
+        }
+        .info-title {
+            margin: 2px 0 1px;
+            font-size: 1.02rem;
+            font-weight: 800;
             color: var(--ink);
         }
-        .promise li + li { border-top: 1px solid var(--line); }
-        /* 파란 화살표(›) 마커: 첫 줄 가운데에 맞춤 */
-        .promise li::before {
-            width: 7px;
-            height: 7px;
-            left: 4px;
-            top: calc(12px + 0.875em - 4px);
-            border-radius: 0;
-            background: none;
-            border-right: 2px solid var(--blue);
-            border-bottom: 2px solid var(--blue);
-            transform: rotate(-45deg);
-        }
-
-        /* 스포 예시 */
-        .example {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin: 10px 0;
-        }
-        .example-title {
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: var(--muted);
-            margin-bottom: 6px;
-        }
-        .quote {
+        .info-sub {
+            font-size: 0.82rem;
             color: var(--ink-2);
-            padding-left: 12px;
-            border-left: 3px solid var(--line);
-            margin-bottom: 10px;
         }
-        .verdict {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 0;
-        }
-        .verdict + .verdict { border-top: 1px dashed var(--line); }
         .badge {
             flex-shrink: 0;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 2px 10px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 9px;
             border-radius: 999px;
+            background: #f1f5f9;
+            color: var(--muted);
         }
-        .badge.ok { background: var(--green-soft); color: var(--green); }
-        .badge.no { background: var(--red-soft); color: var(--red); }
+        .badge.next { background: var(--blue); color: #ffffff; }
+        .badge.today { background: var(--red); color: #ffffff; }
+        .badge.todo { background: var(--blue-soft); color: var(--blue); }
 
         footer {
             text-align: center;
@@ -463,111 +386,12 @@
         @media (max-width: 480px) {
             body { padding: 0 0 24px; font-size: 14.5px; }
             .container { border-radius: 0; box-shadow: none; }
-            section { padding: 24px 18px 20px; }
-            .toggle-body { padding: 12px 14px 14px; }
-            /* 모바일: 목차를 두 줄로 감싸서 전부 보이게 */
-            .toc { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
-            .toc-links { display: contents; }
-            section { scroll-margin-top: 100px; }
+            main { padding: 16px 14px 20px; }
+            .books { padding: 36px 8px 0; }
+            .spine { flex-basis: 32px; }
         }
-    </style>
-    <style>
-        /* ===== 입문서 전용 ===== */
-        .mini-title {
-            margin: 16px 0 4px;
-            font-size: 0.88rem;
-            font-weight: 800;
-            color: var(--ink);
-        }
-        p.sub { display: block; }
-        .nowrap { white-space: nowrap; }
-
-        /* 핵심 정보 칩 */
-        .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 0 0 10px;
-        }
-        .chip {
-            display: inline-block;
-            font-size: 0.74rem;
-            font-weight: 700;
-            line-height: 1.4;
-            padding: 3px 9px;
-            border-radius: 999px;
-            background: #f1f5f9;
-            color: var(--ink-2);
-            vertical-align: middle;
-        }
-        .chip.ok { background: var(--green-soft); color: var(--green); }
-        .chip.no { background: #f1f5f9; color: var(--muted); }
-        .chip.warn { background: var(--red-soft); color: var(--red); }
-        .chips.books .chip { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
-        summary .chip { margin-left: 4px; }
-
-        /* 종류 비교 카드 */
-        .kind-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 10px 0;
-        }
-        .kind {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 12px 14px;
-            background: #fbfcfe;
-        }
-        .kind-title {
-            font-weight: 800;
-            margin-bottom: 6px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px;
-        }
-        .kind p { margin-bottom: 4px; }
-        .kind p:last-child { margin-bottom: 0; }
-        .kind ol { margin-bottom: 0; }
-
-        /* 지기 역할 */
-        .role-list {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .role {
-            display: grid;
-            grid-template-columns: 92px 1fr;
-            gap: 10px;
-            padding: 10px 14px;
-            color: var(--ink-2);
-        }
-        .role + .role { border-top: 1px solid var(--line); }
-        .role-name { font-weight: 800; color: var(--blue); }
-
-        /* Q&A */
-        .qa summary { padding-left: 46px; }
-        .q {
-            position: absolute;
-            left: 16px;
-            top: 15px;
-            width: 22px;
-            height: 22px;
-            border-radius: 7px;
-            background: var(--blue);
-            color: #ffffff;
-            font-size: 0.75rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        @media (max-width: 480px) {
-            .kind-grid { grid-template-columns: 1fr; }
-            .role { grid-template-columns: 1fr; gap: 2px; }
+        @media (prefers-reduced-motion: reduce) {
+            .spine, .info { animation: none; transition: none; }
         }
     </style>
 </head>
@@ -577,24 +401,290 @@
     <header class="hero">
         <a class="back" href="noticeList.html">‹ 목록으로</a>
         <h1>2027 온라인 프로그램</h1>
+        <p>책을 눌러서 모임 날짜를 확인하세요 🐴</p>
     </header>
 
-    <main>
-        <section id="intro">
-            <div class="sec-head">
-                <span class="sec-num">01</span>
-                <h2>프로그램 소개</h2>
-            </div>
-            <div class="note tip">
-                <p>2027 온라인 프로그램 내용을 준비 중이에요 🐑</p>
-            </div>
-        </section>
-    </main>
+    <div class="bar">
+        <span id="summary-info"></span>
+        <span class="legend">
+            <span><i class="lg-read"></i>읽은 책</span>
+            <span><i class="lg-next"></i>다음 책</span>
+            <span><i class="lg-todo"></i>읽을 책</span>
+        </span>
+    </div>
+
+    <main id="programs"></main>
 
     <footer>오늘도 와글와글 📚</footer>
 </div>
 
 <script>
+    // ===== 일정 데이터: [날짜, 책 제목, 작가, 쪽수, 출판사, (책등에 쓸 짧은 제목)] =====
+    const PROGRAMS = [
+        { name: '그리스 고전', host: '임유월', sessions: [
+            ['2027-01-10', '일리아스 (~12권)', '호메로스', 424, '현대지성, 숲', '일리아스 1'],
+            ['2027-02-14', '일리아스 (~24권)', '호메로스', 424, '현대지성, 숲', '일리아스 2'],
+            ['2027-04-11', '오뒷세이아 (전반부 ~제12권)', '호메로스', 336, '현대지성, 을유문화사, 숲', '오뒷세이아 1'],
+            ['2027-05-16', '오뒷세이아 (후반부 ~제24권)', '호메로스', 336, '현대지성, 을유문화사, 숲', '오뒷세이아 2'],
+            ['2027-10-10', '오레스테이아 3부작', '아이스퀼로스', 272, '을유문화사'],
+        ]},
+        { name: '눈물을 마시는 새', host: '구마', sessions: [
+            ['2027-01-31', '눈물을 마시는 새 1', '이영도', 581, '황금가지'],
+            ['2027-02-28', '눈물을 마시는 새 2', '이영도', 627, '황금가지'],
+            ['2027-03-28', '눈물을 마시는 새 3', '이영도', 474, '황금가지'],
+            ['2027-04-25', '눈물을 마시는 새 4', '이영도', 444, '황금가지'],
+        ]},
+        { name: '대하잡숴', host: '따란', sessions: [
+            ['2027-01-17', '지리산 1', '이병주', 322, '한길사'],
+            ['2027-02-21', '지리산 2', '이병주', 343, '한길사'],
+            ['2027-03-21', '지리산 3', '이병주', 328, '한길사'],
+            ['2027-04-18', '지리산 4', '이병주', 358, '한길사'],
+            ['2027-05-16', '지리산 5', '이병주', 342, '한길사'],
+            ['2027-06-20', '지리산 6', '이병주', 339, '한길사'],
+            ['2027-07-18', '지리산 7', '이병주', 393, '한길사'],
+        ]},
+        { name: '롱롱죽겠지2027', host: '에스', sessions: [
+            ['2027-03-07', '유리알 유희 1', '헤르만 헤세', 420, '민음사'],
+            ['2027-03-21', '유리알 유희 2', '헤르만 헤세', 353, '민음사'],
+            ['2027-06-06', '백년의 고독 1', '가브리엘 가르시아 마르케스', 297, '민음사'],
+            ['2027-06-20', '백년의 고독 2', '가브리엘 가르시아 마르케스', 331, '민음사'],
+            ['2027-08-01', '93년 (상)', '빅토르 위고', 288, '열린책들'],
+            ['2027-08-15', '93년 (하)', '빅토르 위고', 360, '열린책들'],
+            ['2027-10-03', '여인의 초상 (상)', '헨리 제임스', 520, '열린책들, 민음사'],
+            ['2027-10-17', '여인의 초상 (하)', '헨리 제임스', 544, '열린책들, 민음사'],
+        ]},
+        { name: '벌거벗은한국사', host: '써니', sessions: [
+            ['2027-03-28', '벌거벗은 한국사 : 고려편', 'tvN STORY 〈벌거벗은 한국사〉 제작팀', 320, '프런트페이지', '고려편'],
+            ['2027-04-25', '벌거벗은 한국사 : 조선편', 'tvN STORY 〈벌거벗은 한국사〉 제작팀', 304, '프런트페이지', '조선편'],
+            ['2027-05-30', '벌거벗은 한국사 : 근현대편', 'tvN STORY 〈벌거벗은 한국사〉 제작팀', 288, '프런트페이지', '근현대편'],
+            ['2027-06-27', '벌거벗은 한국사 : 인물편', 'tvN STORY 〈벌거벗은 한국사〉 제작팀', 320, '프런트페이지', '인물편'],
+            ['2027-07-25', '벌거벗은 한국사 : 사건편', 'tvN STORY 〈벌거벗은 한국사〉 제작팀', 312, '프런트페이지', '사건편'],
+            ['2027-08-29', '벌거벗은 한국사 : 권력편', 'tvN STORY 〈벌거벗은 한국사〉 제작팀', 344, '프런트페이지', '권력편'],
+            ['2027-09-26', '벌거벗은 한국사 : 영웅편', 'tvN STORY 〈벌거벗은 한국사〉 제작팀', 312, '프런트페이지', '영웅편'],
+        ]},
+        { name: '사랑에빠진게죄는아니잖아', host: '수리', sessions: [
+            ['2027-02-14', '데미지', '조세핀 하트', 268, '녹색광선'],
+            ['2027-05-09', '마담 보바리', '구스타브 플로베르', 557, '민음사, 문학동네, 열린책들'],
+            ['2027-07-11', '테레즈 라캥', '에밀 졸라', 360, '문학동네'],
+            ['2027-09-12', '위험한 관계', '쇼데를로 드 라클로', 560, '문학과지성사'],
+            ['2027-12-12', '피아노 치는 여자', '엘프리데 옐리네크', 400, '문학동네'],
+        ]},
+        { name: '오싹한게딱좋아', host: '주니', sessions: [
+            ['2027-01-03', '롱 워크', '스티븐 킹', 440, '황금가지'],
+            ['2027-03-14', '열차 안의 낯선 자들', '퍼트리샤 하이스미스', 396, '오픈하우스'],
+            ['2027-04-18', '캐리', '스티븐 킹', 312, '황금가지'],
+            ['2027-08-01', '우리는 언제나 성에 살았다', '셜리 잭슨', 324, '엘릭시르'],
+            ['2027-11-14', '양들의 침묵', '토머스 해리스', 504, '나무의철학'],
+        ]},
+        { name: '요즘 사회학', host: '모모', sessions: [
+            ['2027-02-21', '무수면 사회', '김찬호', 300, '21세기북스'],
+            ['2027-04-04', '이 일에는 이름이 없다', '김희경', 256, '웨일북'],
+            ['2027-08-22', '혼자 죽는 사회', '송인주', 276, '김영사'],
+            ['2027-11-21', '예측된 미래', '모나 슬론', 320, '에코리브르'],
+        ]},
+        { name: '은하수를여행하는히치하이커를위한 안내서', host: '난수', sessions: [
+            ['2027-05-30', '은하수를 여행하는 히치하이커를 위한 안내서 1', '더글러스 애덤스', 295, '책세상', '안내서 1'],
+            ['2027-06-27', '은하수를 여행하는 히치하이커를 위한 안내서 2', '더글러스 애덤스', 312, '책세상', '안내서 2'],
+            ['2027-07-25', '은하수를 여행하는 히치하이커를 위한 안내서 3', '더글러스 애덤스', 308, '책세상', '안내서 3'],
+            ['2027-08-29', '은하수를 여행하는 히치하이커를 위한 안내서 4', '더글러스 애덤스', 294, '책세상', '안내서 4'],
+            ['2027-09-26', '은하수를 여행하는 히치하이커를 위한 안내서 5', '더글러스 애덤스', 351, '책세상', '안내서 5'],
+            ['2027-10-31', '은하수를 여행하는 히치하이커를 위한 안내서 6', '더글러스 애덤스', 493, '책세상', '안내서 6'],
+        ]},
+        { name: '이상한 사람들, 이상한 믿음들', host: '제임스', sessions: [
+            ['2027-04-11', '컬티시 : 광신의 언어학', '어맨다 몬텔', 344, '아르테'],
+            ['2027-06-13', '믿음의 탄생', '마이클 셔머', 501, '지식갤러리'],
+            ['2027-08-15', '과학이라는 헛소리', '박재용', 300, 'MID'],
+            ['2027-10-24', '그들의 생각을 바꾸는 방법', '데이비드 맥레이니', 444, '웅진지식하우스'],
+        ]},
+        { name: '자연과학 맛보기: 300~400번대 책장 사이', host: '써니', sessions: [
+            ['2027-01-03', '찬란한 멸종', '이정모', 352, '다산북스'],
+            ['2027-04-04', '수학이 생명의 언어라면', '김재경', 244, '동아시아'],
+            ['2027-07-04', '지능의 기원', '맥스 베넷', 536, '더퀘스트'],
+            ['2027-09-05', '나는 풍요로웠고, 지구는 달라졌다', '호프 자런', 276, '김영사'],
+        ]},
+        { name: '중화권 첩보 추리 스릴러', host: '임유월', sessions: [
+            ['2027-05-02', '암호 해독자', '마이자', 424, '민음사'],
+            ['2027-06-06', '바츠먼의 변호인', '탕푸루이', 500, '글항아리'],
+            ['2027-09-19', '풍기농서', '마보융', 656, '알에이치코리아'],
+            ['2027-12-19', '마천대루', '천쉐', 484, '인플루엔셜'],
+        ]},
+        { name: '해리포터', host: '동글', sessions: [
+            ['2027-01-31', '해리포터와 불사조 기사단 3', 'J.K. 롤링', 288, '문학수첩'],
+            ['2027-02-28', '해리포터와 불사조 기사단 4', 'J.K. 롤링', 320, '문학수첩'],
+            ['2027-03-28', '해리포터와 불사조 기사단 5', 'J.K. 롤링', 288, '문학수첩'],
+            ['2027-04-25', '해리포터와 혼혈 왕자 1', 'J.K. 롤링', 256, '문학수첩'],
+            ['2027-05-30', '해리포터와 혼혈 왕자 2', 'J.K. 롤링', 272, '문학수첩'],
+            ['2027-06-27', '해리포터와 혼혈 왕자 3', 'J.K. 롤링', 248, '문학수첩'],
+            ['2027-07-25', '해리포터와 혼혈 왕자 4', 'J.K. 롤링', 224, '문학수첩'],
+            ['2027-08-29', '해리포터와 죽음의 성물 1', 'J.K. 롤링', 312, '문학수첩'],
+            ['2027-09-26', '해리포터와 죽음의 성물 2', 'J.K. 롤링', 288, '문학수첩'],
+            ['2027-10-31', '해리포터와 죽음의 성물 3', 'J.K. 롤링', 288, '문학수첩'],
+            ['2027-11-28', '해리포터와 죽음의 성물 4', 'J.K. 롤링', 296, '문학수첩'],
+            ['2027-12-26', '해리포터와 저주받은 아이 1, 2부', 'J.K. 롤링', 496, '문학수첩', '저주받은 아이'],
+        ]},
+        { name: '환대입문학', host: '영원', sessions: [
+            ['2027-01-17', '손절사회', '이승연', 384, '어크로스'],
+            ['2027-03-14', '대성당', '레이먼드 카버', 348, '문학동네'],
+            ['2027-05-02', '타인의 고통', '수전 손택', 253, '이후'],
+            ['2027-08-08', '빌러비드', '토니 모리슨', 468, '문학동네'],
+            ['2027-11-07', '사람, 장소, 환대', '김현경', 297, '문학과지성사'],
+        ]},
+    ];
+
+    // 프로그램별 책 색
+    const COLORS = ['#c2410c', '#0f766e', '#1e40af', '#9f1239', '#6d28d9', '#a16207', '#15803d',
+                    '#b91c1c', '#be185d', '#334155', '#0369a1', '#7c2d12', '#4d7c0f', '#0e7490'];
+
+    const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    function parseDate(s) {
+        const [y, m, d] = s.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+    function esc(s) {
+        return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+    function daysLeft(date) {
+        return Math.round((date - today) / 86400000);
+    }
+    // 쪽수 → 책등 높이 (184쪽 ≈ 108px, 719쪽 ≈ 176px)
+    function spineHeight(pages) {
+        const p = Math.min(Math.max(pages || 300, 150), 750);
+        return Math.round(104 + (p - 150) / 600 * 76);
+    }
+    // 책등에는 짧게: "해리포터와" 생략, 긴 괄호 설명(장 범위·부제)은 카드에서만
+    function spineLabel(title) {
+        return title.replace(/^해리포터와 /, '').replace(/\s*\([^)]{3,}\)/, '');
+    }
+
+    // 데이터 정리
+    const shelves = PROGRAMS.map((p, pi) => {
+        const books = p.sessions.map(([ds, title, author, pages, pub, short], i) => {
+            const date = parseDate(ds);
+            return { date, title, author, pages, pub, short, i, state: date < today ? 'read' : 'todo' };
+        });
+        const next = books.find(b => b.state === 'todo');
+        if (next) next.state = 'next';
+        return { name: p.name, host: p.host, color: COLORS[pi % COLORS.length], books, next };
+    });
+
+    // 그리기
+    let totalLeft = 0;
+    const root = document.getElementById('programs');
+    root.innerHTML = shelves.map((s, si) => {
+        const read = s.books.filter(b => b.state === 'read').length;
+        totalLeft += s.books.length - read;
+        const done = read === s.books.length;
+        const spines = s.books.map(b => `
+            <button type="button" class="spine ${b.state}" style="--h:${spineHeight(b.pages)}px;--i:${b.i}"
+                data-shelf="${si}" data-book="${b.i}" aria-label="${esc(b.title)}" aria-pressed="false">
+                ${b.state === 'next' ? `<span class="spine-pin">${daysLeft(b.date) === 0 ? 'TODAY' : 'NEXT'}</span>` : ''}
+                <span class="spine-title"><span>${upright(esc(b.short || spineLabel(b.title)))}</span></span>
+                ${b.state === 'read' ? '<span class="spine-check">✓</span>' : ''}
+            </button>`).join('');
+        return `<section class="shelf" style="--c:${s.color}">
+            <div class="shelf-head">
+                <span class="shelf-name">${esc(s.name)}${s.host ? `<span class="host">총대 ${esc(s.host)}</span>` : ''}<span class="shelf-hint">밀어서 보기 →</span></span>
+                <span class="shelf-count${done ? ' done' : ''}">${done ? '완주 🎉' : `${read} / ${s.books.length}권`}</span>
+            </div>
+            <div class="shelf-wrap">
+                <div class="shelf-scroll">
+                    <div class="shelf-inner">
+                        <div class="books">${spines}</div>
+                        <div class="plank"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="info" aria-live="polite"></div>
+        </section>`;
+    }).join('');
+
+    document.getElementById('summary-info').textContent =
+        `프로그램 ${PROGRAMS.length}개 · 남은 모임 ${totalLeft}회`;
+
+    // 책 선택 → 정보 카드
+    function select(si, bi) {
+        const shelfEl = root.children[si];
+        const info = shelfEl.querySelector('.info');
+        const spines = shelfEl.querySelectorAll('.spine');
+        const wasSelected = spines[bi].classList.contains('selected');
+
+        spines.forEach(el => { el.classList.remove('selected'); el.setAttribute('aria-pressed', 'false'); });
+        if (wasSelected) { info.classList.remove('show'); return; }
+
+        spines[bi].classList.add('selected');
+        spines[bi].setAttribute('aria-pressed', 'true');
+
+        const s = shelves[si], b = s.books[bi];
+        const m = String(b.date.getMonth() + 1).padStart(2, '0');
+        const d = String(b.date.getDate()).padStart(2, '0');
+        const left = daysLeft(b.date);
+        let badge;
+        if (b.state === 'read') badge = '<span class="badge">읽었어요 ✓</span>';
+        else if (left === 0) badge = '<span class="badge today">오늘 모임!</span>';
+        else badge = `<span class="badge ${b.state}">D-${left}</span>`;
+        const sub = [b.author, b.pages ? b.pages + '쪽' : '', b.pub, `${s.books.length}권 중 ${bi + 1}번째`].filter(Boolean).join(' · ');
+
+        info.innerHTML = `
+            <div class="info-top"><span>${m}.${d} ${DAYS[b.date.getDay()]}요일</span>${badge}</div>
+            <div class="info-title">${esc(b.title)}</div>
+            <div class="info-sub">${esc(sub)}</div>`;
+        info.classList.remove('show');
+        void info.offsetWidth; // 애니메이션 다시 재생
+        info.classList.add('show');
+    }
+
+    root.addEventListener('click', e => {
+        const btn = e.target.closest('.spine');
+        if (btn) select(+btn.dataset.shelf, +btn.dataset.book);
+    });
+
+    // 처음엔 각 칸의 "다음 책"을 펼쳐둠
+    shelves.forEach((s, si) => { if (s.next) select(si, s.next.i); });
+
+    // 책장이 넘치는 칸: 힌트 표시 + 다음 책이 보이게 스크롤
+    function updateScrollable() {
+        root.querySelectorAll('.shelf').forEach((shelfEl, si) => {
+            const sc = shelfEl.querySelector('.shelf-scroll');
+            const wrap = shelfEl.querySelector('.shelf-wrap');
+            const over = sc.scrollWidth > sc.clientWidth + 1;
+            shelfEl.classList.toggle('scrollable', over);
+            const setMore = () => wrap.classList.toggle('more', over && sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 4);
+            if (over && !sc.dataset.init && shelves[si].next) {
+                const sp = shelfEl.querySelectorAll('.spine')[shelves[si].next.i];
+                sc.scrollLeft = sp.offsetLeft + sp.offsetWidth / 2 - sc.clientWidth / 2;
+            }
+            sc.dataset.init = '1';
+            setMore();
+            sc.onscroll = setMore;
+        });
+    }
+    updateScrollable();
+    window.addEventListener('resize', updateScrollable);
+
+    // 세로쓰기에서 숫자(1, 10, 1/2)는 눕지 않고 똑바로 서게
+    function upright(html) {
+        return html.replace(/\d+(?:\/\d+)?/g, '<span class="tcy">$&</span>');
+    }
+
+    // 책등 제목이 넘치면 글씨를 조금씩 줄임 (최소 8px)
+    function fitSpines() {
+        document.querySelectorAll('.spine-title').forEach(el => {
+            let size = 11;
+            el.style.fontSize = size + 'px';
+            while ((el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1) && size > 8) {
+                size -= 0.5;
+                el.style.fontSize = size + 'px';
+            }
+        });
+    }
+    fitSpines();
+    if (document.fonts) document.fonts.ready.then(fitSpines);
+    let fitTimer;
+    window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitSpines, 150); });
+
     // 새로고침하면 항상 맨 위에서 시작
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.addEventListener('load', function () {
