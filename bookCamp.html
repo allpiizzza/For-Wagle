@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>1박2일 캠프 장바구니</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        * { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
+        body {
+            background-color: #f1f5f9;
+            background-image:
+                radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.16) 0, transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(251, 146, 60, 0.15) 0, transparent 40%);
+            background-attachment: fixed;
+        }
+        .hidden { display: none !important; }
+        .tab-on { background: #111827; color: #fff; }
+        .done-row .item-name { text-decoration: line-through; color: #9ca3af; }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+
+<!--
+  ===== Supabase 테이블 생성 SQL (SQL Editor에서 한 번 실행) =====
+  create table public.camp_items (
+    id          bigint generated always as identity primary key,
+    created_at  timestamptz not null default now(),
+    kind        text not null check (kind in ('coupang','personal')),
+    name        text not null,
+    qty         int  not null default 1,
+    url         text,
+    assignee    text,
+    price       int,
+    memo        text,
+    added_by    text,
+    done        boolean not null default false
+  );
+  alter table public.camp_items enable row level security;
+  create policy "camp read"   on public.camp_items for select using (true);
+  create policy "camp insert" on public.camp_items for insert with check (true);
+  create policy "camp update" on public.camp_items for update using (true) with check (true);
+  create policy "camp delete" on public.camp_items for delete using (true);
+-->
+
+<div class="max-w-2xl mx-auto px-4 py-8 md:py-12">
+    <header class="text-center mb-6">
+        <p class="text-sm text-emerald-600 font-semibold mb-1">🏕️ WAGLE CAMP</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">1박2일 캠프 장바구니</h1>
+        <p class="text-gray-500 text-sm mt-2">필요한 건 전부 여기에 담아주세요</p>
+    </header>
+
+    <!-- 요약 -->
+    <section id="summary" class="grid grid-cols-3 gap-2 mb-6 text-center"></section>
+
+    <!-- 담기 폼 -->
+    <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-5 mb-6">
+        <div class="flex gap-2 mb-4">
+            <button type="button" data-kind="coupang" class="kind-btn flex-1 py-2.5 rounded-xl text-sm font-bold border border-gray-200 cursor-pointer">🚀 쿠팡주문</button>
+            <button type="button" data-kind="personal" class="kind-btn flex-1 py-2.5 rounded-xl text-sm font-bold border border-gray-200 cursor-pointer">🛍️ 개인구매</button>
+        </div>
+        <form id="add-form" class="flex flex-col gap-2.5">
+            <div id="url-wrap">
+                <input id="f-url" type="url" inputmode="url" placeholder="쿠팡 링크 붙여넣기 (https://www.coupang.com/...)"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" />
+            </div>
+            <input id="f-name" type="text" maxlength="60" required placeholder="품목 이름 (예: 생수 2L 6개입)"
+                   class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" />
+            <div class="flex gap-2">
+                <input id="f-qty" type="number" min="1" value="1" placeholder="수량"
+                       class="w-20 px-3 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm text-center" />
+                <input id="f-price" type="number" min="0" step="100" placeholder="예상 금액(원, 선택)"
+                       class="flex-1 min-w-0 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" />
+            </div>
+            <div id="assignee-wrap">
+                <input id="f-assignee" type="text" maxlength="20" list="people" placeholder="구매 담당자 이름"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" />
+                <datalist id="people"></datalist>
+            </div>
+            <input id="f-memo" type="text" maxlength="100" placeholder="메모 (선택)"
+                   class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" />
+            <input id="f-by" type="text" maxlength="20" placeholder="담은 사람 (선택)"
+                   class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" />
+            <button id="f-submit" type="submit"
+                    class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold rounded-xl transition cursor-pointer">
+                장바구니에 담기
+            </button>
+        </form>
+    </section>
+
+    <!-- 목록 탭 -->
+    <div class="flex gap-1.5 mb-3 text-sm flex-wrap">
+        <button data-tab="all" class="tab-btn px-3.5 py-1.5 rounded-full bg-white border border-gray-200 cursor-pointer">전체</button>
+        <button data-tab="coupang" class="tab-btn px-3.5 py-1.5 rounded-full bg-white border border-gray-200 cursor-pointer">쿠팡주문</button>
+        <button data-tab="personal" class="tab-btn px-3.5 py-1.5 rounded-full bg-white border border-gray-200 cursor-pointer">개인구매</button>
+        <button data-tab="people" class="tab-btn px-3.5 py-1.5 rounded-full bg-white border border-gray-200 cursor-pointer">담당자별</button>
+        <button id="refresh" class="ml-auto px-3 py-1.5 text-gray-500 hover:text-gray-800 cursor-pointer" title="새로고침">↻</button>
+    </div>
+    <section id="list" class="flex flex-col gap-2"></section>
+</div>
+
+<div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg z-50"></div>
+
+<script>
+    // ===== 설정 =====
+    const SUPABASE_URL = 'https://skpmxrgewpdmlvckzekh.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_1dV_gRdjg3NTWyBiD56t_A_BH-HESQ6';
+    const TABLE = 'camp_items';
+    let sb = null;
+    try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) { console.warn('Supabase 초기화 실패:', e); }
+
+    // ===== 상태 =====
+    let items = [];
+    let kind = 'coupang';
+    let tab = 'all';
+    try { tab = localStorage.getItem('camp_tab') || 'all'; } catch (e) {}
+    try { document.getElementById('f-by').value = localStorage.getItem('camp_by') || ''; } catch (e) {}
+
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const won = n => (n || 0).toLocaleString('ko-KR') + '원';
+    const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch (e) { return ''; } };
+    const isCoupang = u => /(^|\.)coupang\.com$|(^|\.)coupa\.ng$/.test((() => { try { return new URL(u).hostname; } catch (e) { return ''; } })());
+
+    function toast(msg) {
+        const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+        clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 2000);
+    }
+
+    // ===== 종류 토글 =====
+    function setKind(k) {
+        kind = k;
+        document.querySelectorAll('.kind-btn').forEach(b => b.classList.toggle('tab-on', b.dataset.kind === k));
+        $('url-wrap').classList.toggle('hidden', k !== 'coupang');
+        $('assignee-wrap').classList.toggle('hidden', k !== 'personal');
+        $('f-assignee').required = k === 'personal';
+    }
+    document.querySelectorAll('.kind-btn').forEach(b => b.onclick = () => setKind(b.dataset.kind));
+
+    // 링크를 붙여넣으면 쿠팡 링크인지 확인
+    $('f-url').addEventListener('input', e => {
+        const u = e.target.value.trim();
+        if (u && !isCoupang(u)) e.target.classList.add('ring-2', 'ring-amber-400');
+        else e.target.classList.remove('ring-2', 'ring-amber-400');
+    });
+
+    // ===== 데이터 =====
+    async function load() {
+        if (!sb) { $('list').innerHTML = emptyBox('DB 연결에 실패했어요'); return; }
+        const { data, error } = await sb.from(TABLE).select('*').order('created_at', { ascending: true });
+        if (error) { console.error(error); $('list').innerHTML = emptyBox('목록을 불러오지 못했어요'); return; }
+        items = data || [];
+        render();
+    }
+
+    $('add-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const name = $('f-name').value.trim();
+        const url = safeUrl($('f-url').value.trim());
+        const assignee = $('f-assignee').value.trim();
+        if (!name) return;
+        if (kind === 'coupang' && $('f-url').value.trim() && !url) { toast('링크 형식을 확인해주세요'); return; }
+        if (kind === 'personal' && !assignee) { toast('담당자를 적어주세요'); return; }
+
+        const by = $('f-by').value.trim();
+        try { localStorage.setItem('camp_by', by); } catch (e) {}
+        const row = {
+            kind, name,
+            qty: Math.max(1, parseInt($('f-qty').value) || 1),
+            price: $('f-price').value ? parseInt($('f-price').value) : null,
+            url: kind === 'coupang' ? (url || null) : null,
+            assignee: kind === 'personal' ? assignee : null,
+            memo: $('f-memo').value.trim() || null,
+            added_by: by || null,
+        };
+        $('f-submit').disabled = true;
+        const { error } = await sb.from(TABLE).insert([row]);
+        $('f-submit').disabled = false;
+        if (error) { console.error(error); toast('저장에 실패했어요'); return; }
+        ['f-name', 'f-url', 'f-price', 'f-memo'].forEach(id => $(id).value = '');
+        $('f-qty').value = 1;
+        toast('담았어요!');
+        load();
+    });
+
+    async function toggleDone(id) {
+        const it = items.find(x => x.id === id); if (!it) return;
+        it.done = !it.done; render();
+        const { error } = await sb.from(TABLE).update({ done: it.done }).eq('id', id);
+        if (error) { it.done = !it.done; render(); toast('변경 실패'); }
+    }
+
+    async function reassign(id) {
+        const it = items.find(x => x.id === id); if (!it) return;
+        const v = prompt('구매 담당자 이름', it.assignee || '');
+        if (v === null || !v.trim()) return;
+        const { error } = await sb.from(TABLE).update({ assignee: v.trim() }).eq('id', id);
+        if (error) { toast('변경 실패'); return; }
+        load();
+    }
+
+    async function removeItem(id) {
+        const it = items.find(x => x.id === id); if (!it) return;
+        if (!confirm(`'${it.name}'을(를) 장바구니에서 뺄까요?`)) return;
+        const { error } = await sb.from(TABLE).delete().eq('id', id);
+        if (error) { toast('삭제 실패'); return; }
+        load();
+    }
+
+    // ===== 렌더링 =====
+    const emptyBox = msg => `<div class="text-center text-gray-400 text-sm py-10 bg-white/60 rounded-2xl border border-dashed border-gray-200">${esc(msg)}</div>`;
+
+    function itemRow(it) {
+        const total = it.price ? it.price * it.qty : 0;
+        const badge = it.kind === 'coupang'
+            ? `<span class="text-[11px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">쿠팡</span>`
+            : `<span class="text-[11px] font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full">개인</span>`;
+        const link = it.kind === 'coupang' && safeUrl(it.url)
+            ? `<a href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" class="shrink-0 text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 px-3 py-1.5 rounded-lg">쿠팡에서 열기 ↗</a>` : '';
+        const who = it.kind === 'personal'
+            ? `<button onclick="reassign(${it.id})" class="text-orange-700 font-semibold hover:underline cursor-pointer">👤 ${esc(it.assignee || '미정')}</button>` : '';
+        return `
+        <div class="${it.done ? 'done-row opacity-70' : ''} bg-white rounded-2xl border border-gray-100 shadow-sm p-3.5 flex items-start gap-3">
+            <input type="checkbox" ${it.done ? 'checked' : ''} onchange="toggleDone(${it.id})"
+                   class="mt-1 w-5 h-5 accent-emerald-600 cursor-pointer shrink-0" title="${it.kind === 'coupang' ? '주문 완료' : '구매 완료'}" />
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    ${badge}
+                    <span class="item-name font-semibold text-gray-900 break-all">${esc(it.name)}</span>
+                    <span class="text-gray-400 text-sm">× ${it.qty}</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1 flex gap-x-3 gap-y-1 flex-wrap">
+                    ${who}
+                    ${total ? `<span>${won(total)}</span>` : ''}
+                    ${it.memo ? `<span class="break-all">📝 ${esc(it.memo)}</span>` : ''}
+                    ${it.added_by ? `<span class="text-gray-400">by ${esc(it.added_by)}</span>` : ''}
+                </div>
+            </div>
+            <div class="flex flex-col items-end gap-1.5 shrink-0">
+                ${link}
+                <button onclick="removeItem(${it.id})" class="text-gray-300 hover:text-red-500 text-sm px-1 cursor-pointer" title="삭제">✕</button>
+            </div>
+        </div>`;
+    }
+
+    function render() {
+        // 요약
+        const sum = arr => arr.reduce((s, x) => s + (x.price || 0) * x.qty, 0);
+        const cp = items.filter(x => x.kind === 'coupang'), ps = items.filter(x => x.kind === 'personal');
+        const card = (label, a, b, sub) => `
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm py-3">
+                <p class="text-[11px] text-gray-500">${label}</p>
+                <p class="text-lg font-bold text-gray-900">${a}<span class="text-sm text-gray-400 font-medium">/${b}</span></p>
+                <p class="text-[11px] text-gray-400">${sub}</p>
+            </div>`;
+        $('summary').innerHTML =
+            card('쿠팡 주문완료', cp.filter(x => x.done).length, cp.length, won(sum(cp))) +
+            card('개인 구매완료', ps.filter(x => x.done).length, ps.length, won(sum(ps))) +
+            card('전체 예상금액', items.filter(x => x.done).length, items.length, won(sum(items)));
+
+        // 담당자 자동완성
+        const people = [...new Set(ps.map(x => x.assignee).filter(Boolean))];
+        $('people').innerHTML = people.map(p => `<option value="${esc(p)}">`).join('');
+
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('tab-on', b.dataset.tab === tab));
+        const list = $('list');
+        if (!items.length) { list.innerHTML = emptyBox('아직 담긴 게 없어요'); return; }
+
+        if (tab === 'people') {
+            if (!people.length) { list.innerHTML = emptyBox('개인구매 항목이 없어요'); return; }
+            list.innerHTML = people.map(p => {
+                const mine = ps.filter(x => x.assignee === p);
+                return `
+                <div class="mb-3">
+                    <div class="flex items-baseline justify-between px-1 mb-1.5">
+                        <h3 class="font-bold text-gray-900">👤 ${esc(p)} <span class="text-sm text-gray-400 font-medium">${mine.filter(x => x.done).length}/${mine.length}</span></h3>
+                        <span class="text-xs text-gray-500">${won(sum(mine))}</span>
+                    </div>
+                    <div class="flex flex-col gap-2">${mine.map(itemRow).join('')}</div>
+                </div>`;
+            }).join('');
+            return;
+        }
+        const shown = tab === 'all' ? items : items.filter(x => x.kind === tab);
+        // 미완료 먼저
+        const sorted = [...shown].sort((a, b) => a.done - b.done);
+        list.innerHTML = sorted.length ? sorted.map(itemRow).join('') : emptyBox('항목이 없어요');
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
+        tab = b.dataset.tab;
+        try { localStorage.setItem('camp_tab', tab); } catch (e) {}
+        render();
+    });
+    $('refresh').onclick = load;
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+
+    setKind('coupang');
+    load();
+</script>
+</body>
+</html>
