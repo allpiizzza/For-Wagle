@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>와글 회원 관리</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            background-image:
+                radial-gradient(circle at 15% 10%, rgba(59, 130, 246, 0.18) 0, transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.15) 0, transparent 40%);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 560px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .hero {
+            position: relative;
+            padding: 22px 22px 26px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+            color: #ffffff;
+        }
+        .hero-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .back {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .back:hover { color: #ffffff; }
+        .hero h1 {
+            margin: 10px 0 2px;
+            font-size: 1.45rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .hero p {
+            margin: 0;
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+        }
+        .logout-btn:hover { background: rgba(255, 255, 255, 0.25); }
+
+        .body { padding: 18px 22px 24px; }
+
+        /* 상태 탭 */
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .tab {
+            border: none;
+            background: transparent;
+            border-radius: 9px;
+            padding: 9px 4px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+        }
+        .tab.active {
+            background: #ffffff;
+            color: #1e293b;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        .count {
+            display: inline-block;
+            min-width: 20px;
+            margin-left: 4px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 0.72rem;
+        }
+        .tab[data-status="pending"] .count.has {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        .search {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            margin-bottom: 12px;
+            background: #f8fafc;
+        }
+        .search:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            background: #ffffff;
+        }
+
+        /* 회원 카드 */
+        .member {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #f8fafc;
+            margin-bottom: 8px;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #dbeafe;
+            color: #2563eb;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            font-size: 0.66rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .badge.me { background: #dcfce7; color: #15803d; }
+        .badge.lv0 { background: #fee2e2; color: #b91c1c; }
+        .badge.lv1 { background: #fef3c7; color: #b45309; }
+        .badge.lv2 { background: #dbeafe; color: #1d4ed8; }
+        .badge.lv3 { background: #f1f5f9; color: #475569; }
+        .level-select {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 5px 8px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+        }
+        .level-select:hover, .level-select:focus { border-color: #3b82f6; outline: none; }
+        .email, .date {
+            font-size: 0.74rem;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .date { color: #94a3b8; }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 6px;
+            max-width: 46%;
+        }
+        .act {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 6px 11px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .act:hover { border-color: #3b82f6; color: #1d4ed8; }
+        .act:disabled { opacity: 0.5; cursor: wait; }
+        .act.approve { background: #2563eb; border-color: #2563eb; color: #ffffff; }
+        .act.approve:hover { background: #1d4ed8; color: #ffffff; }
+        .act.reject:hover { border-color: #ef4444; color: #dc2626; }
+
+        .empty, .notice {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.88rem;
+            padding: 28px 10px;
+        }
+        .notice h2 {
+            margin: 0 0 6px;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+        .notice p { margin: 0 0 18px; line-height: 1.5; }
+        .notice a, .google-btn {
+            display: inline-block;
+            border: 1px solid #dadce0;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 11px 18px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1f2937;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .notice a:hover, .google-btn:hover { border-color: #3b82f6; }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e293b;
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 0.84rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            max-width: calc(100% - 32px);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.error { background: #dc2626; }
+
+        @media (max-width: 460px) {
+            .member { flex-wrap: wrap; }
+            .actions { max-width: none; width: 100%; justify-content: flex-start; padding-left: 52px; }
+        }
+
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="hero">
+        <div class="hero-top">
+            <a class="back" href="main.html">← For Wagle</a>
+            <button class="logout-btn" id="logoutBtn" type="button" hidden>로그아웃</button>
+        </div>
+        <h1>🛡️ 회원 관리</h1>
+        <p>구글로 로그인한 사람들을 승인하거나 거절해요</p>
+    </header>
+
+    <div class="body">
+        <div class="notice" id="loading">잠시만 기다려 주세요…</div>
+
+        <div class="notice" id="needLogin" hidden>
+            <h2>로그인이 필요해요</h2>
+            <p>관리자 구글 계정으로 로그인해 주세요.</p>
+            <button class="google-btn" id="googleBtn" type="button">Google 계정으로 로그인</button>
+        </div>
+
+        <div class="notice" id="denied" hidden>
+            <h2>관리자만 볼 수 있어요 🔒</h2>
+            <p id="deniedEmail"></p>
+            <a href="main.html">메인으로 돌아가기</a>
+        </div>
+
+        <section id="panel" hidden>
+            <div class="tabs" role="tablist">
+                <button class="tab active" data-status="pending" type="button">대기<span class="count" id="c-pending">0</span></button>
+                <button class="tab" data-status="approved" type="button">승인<span class="count" id="c-approved">0</span></button>
+                <button class="tab" data-status="rejected" type="button">거절<span class="count" id="c-rejected">0</span></button>
+            </div>
+            <input class="search" id="search" type="search" placeholder="이름이나 이메일로 찾기">
+            <div id="list"></div>
+        </section>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const SUPABASE_URL = 'https://skpmxrgewpdmlvckzekh.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_1dV_gRdjg3NTWyBiD56t_A_BH-HESQ6';
+
+    const $ = (id) => document.getElementById(id);
+    let sb = null;
+    try {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (e) {
+        console.warn('Supabase 초기화 실패:', e);
+    }
+
+    const LEVELS = ['관리자', '이벤트팀', '일반 팀원', '신입'];
+
+    let me = null;
+    let members = [];
+    let currentTab = 'pending';
+
+    function show(view) {
+        ['loading', 'needLogin', 'denied', 'panel'].forEach(id => { $(id).hidden = id !== view; });
+        $('logoutBtn').hidden = view === 'needLogin' || view === 'loading';
+    }
+
+    let toastTimer = null;
+    function toast(msg, isError) {
+        const t = $('toast');
+        t.textContent = msg;
+        t.classList.toggle('error', !!isError);
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function el(tag, cls, text) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        return e;
+    }
+
+    function actionsFor(m) {
+        const list = [];
+        if (m.status !== 'approved') list.push(['승인', 'approve', () => setStatus(m, 'approved')]);
+        if (m.status !== 'rejected') list.push(['거절', 'reject', () => setStatus(m, 'rejected')]);
+        if (m.status !== 'pending') list.push(['대기로', '', () => setStatus(m, 'pending')]);
+        return list;
+    }
+
+    function renderList() {
+        ['pending', 'approved', 'rejected'].forEach(s => {
+            const n = members.filter(m => m.status === s).length;
+            $('c-' + s).textContent = n;
+            $('c-' + s).classList.toggle('has', n > 0);
+        });
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.status === currentTab);
+        });
+
+        const q = $('search').value.trim().toLowerCase();
+        const rows = members.filter(m => m.status === currentTab && (!q
+            || (m.name || '').toLowerCase().includes(q)
+            || (m.email || '').toLowerCase().includes(q)));
+
+        const list = $('list');
+        list.replaceChildren();
+        if (!rows.length) {
+            const msg = { pending: '승인을 기다리는 사람이 없어요 🎉', approved: '승인된 회원이 없어요', rejected: '거절된 계정이 없어요' }[currentTab];
+            list.append(el('div', 'empty', q ? '검색 결과가 없어요' : msg));
+            return;
+        }
+
+        rows.forEach(m => {
+            const card = el('div', 'member');
+            const name = m.name || (m.email || '').split('@')[0] || '이름 없음';
+
+            let avatar;
+            if (m.avatar_url) {
+                avatar = el('img', 'avatar');
+                avatar.src = m.avatar_url;
+                avatar.alt = '';
+                avatar.referrerPolicy = 'no-referrer';
+            } else {
+                avatar = el('span', 'avatar', name.charAt(0).toUpperCase());
+            }
+
+            const info = el('div', 'info');
+            const nameRow = el('div', 'name', name);
+            nameRow.append(el('span', 'badge lv' + m.auth_level, LEVELS[m.auth_level] || ('등급 ' + m.auth_level)));
+            if (m.id === me.id) nameRow.append(el('span', 'badge me', '나'));
+            info.append(nameRow, el('div', 'email', m.email || ''));
+            const dateText = m.status === 'pending'
+                ? '신청 ' + formatDate(m.created_at)
+                : (m.decided_at ? '처리 ' + formatDate(m.decided_at) : '가입 ' + formatDate(m.created_at));
+            info.append(el('div', 'date', dateText));
+
+            const actions = el('div', 'actions');
+            if (m.id !== me.id) {
+                const sel = el('select', 'level-select');
+                sel.setAttribute('aria-label', '등급');
+                LEVELS.forEach((label, lv) => {
+                    const o = el('option', null, `${lv} · ${label}`);
+                    o.value = lv;
+                    o.selected = lv === m.auth_level;
+                    sel.append(o);
+                });
+                sel.addEventListener('change', async () => {
+                    sel.disabled = true;
+                    await setLevel(m, Number(sel.value));
+                });
+                actions.append(sel);
+
+                actionsFor(m).forEach(([label, kind, fn]) => {
+                    const b = el('button', 'act' + (kind ? ' ' + kind : ''), label);
+                    b.type = 'button';
+                    b.addEventListener('click', async () => {
+                        actions.querySelectorAll('button').forEach(x => { x.disabled = true; });
+                        await fn();
+                    });
+                    actions.append(b);
+                });
+            }
+
+            card.append(avatar, info, actions);
+            list.append(card);
+        });
+    }
+
+    async function loadMembers() {
+        const { data, error } = await sb
+            .from('members')
+            .select('id, email, name, avatar_url, status, auth_level, created_at, decided_at')
+            .order('created_at', { ascending: false });
+        if (error) {
+            toast('목록을 불러오지 못했어요: ' + error.message, true);
+            return;
+        }
+        members = data || [];
+        renderList();
+    }
+
+    // 관리자만 수정 가능 (DB 규칙). 처리 시각·처리자는 DB 트리거가 자동 기록
+    async function updateMember(id, changes) {
+        const { data, error } = await sb
+            .from('members')
+            .update(changes)
+            .eq('id', id)
+            .select('id');
+        if (error) return error;
+        // 권한이 없으면 에러 없이 0줄이 바뀌므로 따로 확인
+        if (!data || !data.length) return { message: '권한이 없거나 회원을 찾을 수 없어요' };
+        return null;
+    }
+
+    async function setStatus(m, status) {
+        const error = await updateMember(m.id, { status });
+        if (error) {
+            toast('실패했어요: ' + error.message, true);
+        } else {
+            const label = { approved: '승인했어요', rejected: '거절했어요', pending: '대기로 되돌렸어요' }[status];
+            toast(`${m.name || m.email} 님을 ${label}`);
+        }
+        await loadMembers();
+    }
+
+    async function setLevel(m, level) {
+        if (level === 0 && !confirm(`${m.name || m.email} 님을 관리자로 지정할까요?\n회원 승인·거절과 등급 변경을 할 수 있게 돼요.`)) {
+            renderList();
+            return;
+        }
+        const error = await updateMember(m.id, { auth_level: level });
+        if (error) {
+            toast('실패했어요: ' + error.message, true);
+        } else {
+            toast(`${m.name || m.email} 님을 ${LEVELS[level]}(으)로 바꿨어요`);
+        }
+        await loadMembers();
+    }
+
+    async function render(session) {
+        const user = session && session.user;
+        if (!user) { show('needLogin'); return; }
+        me = user;
+
+        show('loading');
+        const { data: mine, error } = await sb
+            .from('members')
+            .select('status, auth_level')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (error || !mine || mine.auth_level !== 0 || mine.status !== 'approved') {
+            $('deniedEmail').textContent = (user.email || '') + ' 계정은 관리자가 아니에요.';
+            show('denied');
+            return;
+        }
+
+        show('panel');
+        await loadMembers();
+    }
+
+    document.querySelectorAll('.tab').forEach(t => {
+        t.addEventListener('click', () => {
+            currentTab = t.dataset.status;
+            renderList();
+        });
+    });
+    $('search').addEventListener('input', renderList);
+
+    $('googleBtn').addEventListener('click', async () => {
+        if (!sb) return;
+        await sb.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + window.location.pathname }
+        });
+    });
+
+    $('logoutBtn').addEventListener('click', async () => {
+        if (sb) await sb.auth.signOut();
+        show('needLogin');
+    });
+
+    if (sb) {
+        sb.auth.onAuthStateChange((_event, session) => {
+            setTimeout(() => render(session), 0);
+        });
+    } else {
+        show('needLogin');
+        toast('로그인 서비스를 불러오지 못했어요.', true);
+    }
+</script>
+
+</body>
+</html>
